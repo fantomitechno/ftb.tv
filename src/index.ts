@@ -59,6 +59,37 @@ client.on('message', async (channel, tags, message, self) => {
       } else {
         client.say(channel, value);
       }
+    } else if (
+      client.isMod(channel, process.env.CLIENT ?? '') &&
+      (client.isMod(channel, tags.username ?? '') || tags.badges?.broadcaster)
+    ) {
+      const token = await getToken();
+      const self_id = await getChannelID(token, process.env.CLIENT ?? '');
+      console.log(token);
+      console.log(tags['room-id']);
+      switch (command) {
+        case 'title':
+          axios
+            .patch(
+              `https://api.twitch.tv/helix/channels?broadcaster_id=${tags['room-id']}&moderator_id=${self_id}`,
+              {
+                title: args.join(' ')
+              },
+              {
+                headers: {
+                  'Client-ID': process.env.CLIENT_ID ?? '',
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            )
+            .then((res) => {
+              console.log(res.data);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+          break;
       }
     }
   }
