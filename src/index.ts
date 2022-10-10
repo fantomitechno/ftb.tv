@@ -1,12 +1,12 @@
-import {config} from "dotenv";
+import { config } from 'dotenv';
 config();
 
+import { Client } from 'tmi.js';
 import { getCommand } from './firestore';
 import axios from 'axios';
 
-import { Client } from "tmi.js";
+const channels = process.env.CHANNELS?.split(',') ?? [];
 
-const channels = process.env.CHANNELS?.split(",") ?? [];
 /**
  * Get a Twitch Token
  */
@@ -36,15 +36,17 @@ const getChannelID = async (token: string, name: string) => {
 
 const client = new Client({
   identity: {
-		username: process.env.USER,
-		password: process.env.TOKEN
-	},
+    username: process.env.CLIENT,
+    password: process.env.CLIENT_TOKEN
+  },
   channels
-})
+});
 
-client.connect().then(_ => console.log("Connected!")).catch(console.error);
+client
+  .connect()
+  .then((_) => console.log('Connected!'))
+  .catch(console.error);
 
-client.on("message", (channel, tags, message, self) => {
 client.on('message', async (channel, tags, message, self) => {
   if (self) return;
   if (message.startsWith(process.env.PREFIX ?? '!')) {
