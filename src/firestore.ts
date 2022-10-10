@@ -12,4 +12,13 @@ if (!admin.apps.length) {
 
 const database = admin.firestore()
 
+interface command {
+    respond: boolean;
+    value: string;
+}
 
+export const getCommand = async (command: string) => {
+    const data = await database.collection('commands').doc(command).get();
+    if (!data.exists) return null;
+    return data.data() as command;
+};
