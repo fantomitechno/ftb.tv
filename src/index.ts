@@ -7,33 +7,6 @@ import axios from 'axios';
 
 const channels = process.env.CHANNELS?.split(',') ?? [];
 
-/**
- * Get a Twitch Token
- */
-const getToken = async () => {
-  const res = await axios.post(
-    `https://id.twitch.tv/oauth2/token?client_id=${process.env.CLIENT_ID}&client_secret=${process.env.CLIENT_SECRET}&grant_type=client_credentials`
-  );
-  const json = res.data;
-  return json.access_token;
-};
-
-const getChannelID = async (token: string, name: string) => {
-  const res = await axios.get(
-    'https://api.twitch.tv/helix/users?login=' + name,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Client-Id': process.env.CLIENT_ID ?? '',
-        Accept: 'application/vnd.twitchtv.v5+json'
-      }
-    }
-  );
-  const json = res.data;
-  const data = json.data[0];
-  return data.id;
-};
-
 const client = new Client({
   identity: {
     username: process.env.CLIENT,
@@ -46,6 +19,13 @@ client
   .connect()
   .then((_) => console.log('Connected!'))
   .catch(console.error);
+
+const spamMap: {
+  user: string;
+  message: string;
+  count: number;
+  deleteCallback: NodeJS.Timeout;
+}[] = [];
 
 client.on('message', async (channel, tags, message, self) => {
   if (self) return;
@@ -61,37 +41,48 @@ client.on('message', async (channel, tags, message, self) => {
       } else {
         client.say(channel, value);
       }
-    } else if (
-      client.isMod(channel, process.env.CLIENT ?? '') &&
-      (client.isMod(channel, tags.username ?? '') || tags.badges?.broadcaster)
-    ) {
-      const token = await getToken();
-      const self_id = await getChannelID(token, process.env.CLIENT ?? '');
-      console.log(token);
-      console.log(tags['room-id']);
-      switch (command) {
-        case 'title':
-          axios
-            .patch(
-              `https://api.twitch.tv/helix/channels?broadcaster_id=${tags['room-id']}&moderator_id=${self_id}`,
-              {
-                title: args.join(' ')
-              },
-              {
-                headers: {
-                  'Client-ID': process.env.CLIENT_ID ?? '',
-                  Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              }
-            )
-            .then((res) => {
-              console.log(res.data);
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-          break;
+    }
+  }
+
+  if (
+    client.isMod(channel, process.env.CLIENT ?? '') /*&&
+    !(client.isMod(channel, tags.username ?? '') || tags.badges?.broadcaster || tags.badges?.vip)*/
+  ) {
+    const spam = spamMap.find(
+      (s) => s.message == message && s.user == tags.username
+    );
+    if ((spam?.count ?? 0) > 3) {
+      client
+        .timeout(channel, tags.username ?? '', 60, 'Spamming')
+        .catch(console.error);
+      client.deletemessage(channel, tags.id ?? '').catch(console.error);
+      client.say(channel, `@${tags.username} stop spamming!`);
+    } else if (spam) {
+      spam.count++;
+      spam.deleteCallback.refresh();
+    } else {
+      spamMap.push({
+        user: tags.username ?? '',
+        message,
+        count: 1,
+        deleteCallback: setTimeout(() => {
+          spamMap.splice(
+            spamMap.findIndex(
+              (s) => s.message == message && s.user == tags.username
+            ),
+            1
+          );
+        }, 10000)
+      });
+    }
+
+    if (tags['emotes-raw']) {
+      if (tags['emotes-raw'].split('-').length > 6) {
+        client
+          .timeout(channel, tags.username ?? '', 60, 'Too many emotes')
+          .catch(console.error);
+        client.deletemessage(channel, tags.id ?? '').catch(console.error);
+        client.say(channel, `@${tags.username} stop spamming emotes!`);
       }
     }
   }
