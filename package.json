@@ -1,7 +1,6 @@
 {
-    "name": "higa",
-    "version": "0.1.0-fix",
-    "description": "A package to interract with the Discord API coded by myself",
+    "name": "@personal/ftb.tv",
+    "version": "1.0.0",
     "main": "build",
     "typings": "types",
     "scripts": {
@@ -13,12 +12,6 @@
         "dev": "nodemon --watch src --ext ts --exec npm run dev:serve",
         "dev:serve": "ts-node --files src/index.ts -- true"
     },
-    "keywords": [
-        "nodejs",
-        "discord",
-        "discord-bot",
-        "discord-api"
-    ],
     "dependencies": {
         "axios": "^0.26.0",
         "tmi.js": "^1.8.5",
@@ -39,13 +32,5 @@
         "ts-node": "^10.4.0",
         "typedoc": "^0.22.12",
         "typescript": "4.5.5"
-    },
-    "contributors": [
-        "fantomitechno <fantomitechno@gmail.com>"
-    ],
-    "author": "fantomitechno <fantomitechno@gmail.com>",
-    "license": "MIT",
-    "engines": {
-        "node": ">=16.0.0"
     }
 }
