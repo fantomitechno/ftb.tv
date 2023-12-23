@@ -1,23 +1,20 @@
 {
-    "compilerOptions": {
-        "target": "es2020",
-        "module": "commonjs",
-        "outDir": "./build",
-        "rootDir": "./src",
-        "resolveJsonModule": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "strict": true,
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "declarationDir": "types",
-        "noImplicitOverride": true,
-        "noUnusedParameters": true
-    },
-    "ts-node": {
-        "pretty": true
-    },
-    "exclude": ["test/*", "types/*", "deno/*", "mod.ts"]
+  "compilerOptions": {
+    "target": "es2021",
+    "lib": ["ES2021"],
+    "module": "ESNext",
+    "outDir": "./out",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "strict": true
+  },
+  "ts-node": {
+    "pretty": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/test.ts"]
 }

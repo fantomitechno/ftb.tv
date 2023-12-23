@@ -1,0 +1,15 @@
+[discord]
+value = "/me Seems I have a Discord: https://fantomitechno.live/discord"
+respond = false
+
+[hello]
+value = "Hello, %u"
+respond = true
+
+[mods]
+value = "Mods I used: https://rentry.org/fantom-mods"
+respond = false
+
+[voc]
+value = "Alone"
+respond = true
