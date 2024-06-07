@@ -8,7 +8,7 @@ const addCommand = async (commandName: string, message: string) => {
       commandName,
     }
   })) {
-    throw new Error("Command already exist")
+    return false;
   }
   await prisma.command.create({
     data: {
@@ -16,6 +16,7 @@ const addCommand = async (commandName: string, message: string) => {
       message
     }
   })
+  return true;
 }
 
 const delCommand = async (commandName: string) => {
@@ -24,13 +25,14 @@ const delCommand = async (commandName: string) => {
       commandName,
     }
   })) {
-    throw new Error("Command doesn't exist")
+    return false;
   }
   await prisma.command.delete({
     where: {
       commandName
     }
   })
+  return true;
 }
 
 const listCommand = async (isMod: boolean) => {
@@ -42,4 +44,34 @@ const getCommand = async (commandName: string) => {
   return await prisma.command.findFirst({ where: { commandName } });
 }
 
-export { addCommand, listCommand, getCommand, delCommand }
+const getToken = async () => {
+  let token = await prisma.token.findFirst();
+  if (!token) throw new Error("No token");
+  if (token.createdAt.getDate() + token.expiresIn * 1000 < Date.now()) {
+    const req = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `grant_type=refresh_token&refresh_token=${token.refreshToken}&client_id=${process.env.TWITCH_ID}&client_secret=${process.env.TWITCH_SECRET}`
+    })
+    const json = await req.json();
+    const oldAccessToken = token.accessToken;
+    token.accessToken = json.access_token;
+    token.refreshToken = json.refresh_token;
+    token.createdAt = new Date();
+    await prisma.token.update({
+      where: {
+        accessToken: oldAccessToken
+      },
+      data: token
+    })
+  }
+  return token.accessToken;
+}
+
+const getTemplate = async () => {
+  return prisma.template.findFirst();
+}
+
+export { addCommand, listCommand, getCommand, delCommand, getToken, getTemplate }

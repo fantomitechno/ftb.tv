@@ -13,3 +13,15 @@ model Command {
   reply       Boolean @default(true)
   isMod       Boolean @default(false)
 }
+
+model Token {
+  accessToken  String   @unique
+  expiresIn    Int
+  createdAt    DateTime @default(now())
+  refreshToken String
+}
+
+model Template {
+  channel String @id @default("fantomitechno") // j'ai paniqué ok?
+  title   String
+}

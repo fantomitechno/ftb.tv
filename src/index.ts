@@ -1,7 +1,9 @@
 import { ChatUserstate, Client } from "tmi.js";
 import { config } from "dotenv";
-import { addCommand, delCommand, getCommand, listCommand } from "./prisma.js";
 config();
+
+import { addCommand, delCommand, getCommand, listCommand } from "./prisma.js";
+import { getTitle, modifyTitle } from "./helix.js";
 
 const channels = process.env.CHANNELS?.split(",") ?? [];
 
@@ -29,31 +31,43 @@ client.on("message", async (channel, state, message, self) => {
     switch (commandRaw) {
       case "add-com":
         if (isMod(channel, state)) {
-          addCommand(args[0], args.slice(1).join(" "))
-            .catch(() => {
-              client.raw(
-                `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} already exist`
-              );
-            })
-            .then(() => {
-              client.raw(
-                `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} created`
-              );
-            })
+          if (await addCommand(args[0], args.slice(1).join(" "))) {
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} created`
+            );
+          }
+          else {
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} already exist`
+            );
+          }
         }
         break;
       case "del-com":
-        delCommand(args[0])
-          .catch(() => {
-            client.raw(
-              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
-            );
-          })
-          .then(() => {
-            client.raw(
-              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
-            );
-          })
+        if (await delCommand(args[0])) {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
+          );
+        }
+        else {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
+          );
+        }
+        break;
+      case "title":
+        if (!args.length) {
+          client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title is "${await getTitle()}"`)
+        }
+        else {
+          if (!isMod(channel, state)) return;
+          if (await modifyTitle(args.join(" "))) {
+            client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title updated`)
+          }
+          else {
+            client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured check logs @fantomitechno`)
+          }
+        }
         break;
       case "list-com":
       case "help":
