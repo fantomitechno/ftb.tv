@@ -1,8 +1,7 @@
+import { ChatUserstate, Client } from "tmi.js";
 import { config } from "dotenv";
+import { addCommand, delCommand, getCommand, listCommand } from "./prisma.js";
 config();
-
-import { Client } from "tmi.js";
-import { commandList, getCommand } from "./command.js";
 
 const channels = process.env.CHANNELS?.split(",") ?? [];
 
@@ -16,79 +15,65 @@ const client = new Client({
 
 client
   .connect()
-  .then((_) => console.log("Connected!"))
+  .then(() => console.log(`Connected to ${channels.length} channels!`))
   .catch(console.error);
 
-const spamMap: {
-  user: string;
-  message: string;
-  count: number;
-  deleteCallback: NodeJS.Timeout;
-}[] = [];
+const isMod = (channel: string, state: ChatUserstate) => client.isMod(channel, state.username!) || Boolean(state.badges?.broadcaster)
 
-client.on("message", async (channel, tags, message, self) => {
+client.on("message", async (channel, state, message, self) => {
   if (self) return;
+
   if (message.startsWith(process.env.PREFIX ?? "!")) {
-    const [command, ...args] = message.slice(1).split(" ");
-    if (["commands", "help"].includes(command)) {
-      const commands = await commandList();
-      client.raw(
-        `@reply-parent-msg-id=${tags.id} PRIVMSG ${channel} :the commands are: ${commands?.join(", ")}`
-      );
-    }
-    const cmd = await getCommand(command);
-    if (cmd) {
-      const value = cmd.value.replace("%u", tags.username ?? "");
-      if (cmd.respond) {
+    const [commandRaw, ...args] = message.slice(1).split(" ");
+
+    switch (commandRaw) {
+      case "add-com":
+        if (isMod(channel, state)) {
+          addCommand(args[0], args.slice(1).join(" "))
+            .catch(() => {
+              client.raw(
+                `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} already exist`
+              );
+            })
+            .then(() => {
+              client.raw(
+                `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} created`
+              );
+            })
+        }
+        break;
+      case "del-com":
+        delCommand(args[0])
+          .catch(() => {
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
+            );
+          })
+          .then(() => {
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
+            );
+          })
+        break;
+      case "list-com":
+      case "help":
+      case "commands":
+        const commands = await listCommand(isMod(channel, state));
         client.raw(
-          `@reply-parent-msg-id=${tags.id} PRIVMSG ${channel} :${value}`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
         );
-      } else {
-        client.say(channel, value);
-      }
-    }
-  }
-
-  if (
-    client.isMod(channel, process.env.CLIENT ?? "") /*&&
-    !(client.isMod(channel, tags.username ?? '') || tags.badges?.broadcaster || tags.badges?.vip)*/
-  ) {
-    const spam = spamMap.find(
-      (s) => s.message == message && s.user == tags.username
-    );
-    if ((spam?.count ?? 0) > 3) {
-      client
-        .timeout(channel, tags.username ?? "", 60, "Spamming")
-        .catch(console.error);
-      client.deletemessage(channel, tags.id ?? "").catch(console.error);
-      client.say(channel, `@${tags.username} stop spamming!`);
-    } else if (spam) {
-      spam.count++;
-      spam.deleteCallback.refresh();
-    } else {
-      spamMap.push({
-        user: tags.username ?? "",
-        message,
-        count: 1,
-        deleteCallback: setTimeout(() => {
-          spamMap.splice(
-            spamMap.findIndex(
-              (s) => s.message == message && s.user == tags.username
-            ),
-            1
+        break;
+      default:
+        const command = await getCommand(commandRaw);
+        if (!command) return;
+        if (command.isMod && !isMod(channel, state)) return;
+        if (command.message) {
+          if (command.reply) client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${command.message}`
           );
-        }, 10000),
-      });
-    }
-
-    if (tags["emotes-raw"]) {
-      if (tags["emotes-raw"].split("-").length > 6) {
-        client
-          .timeout(channel, tags.username ?? "", 60, "Too many emotes")
-          .catch(console.error);
-        client.deletemessage(channel, tags.id ?? "").catch(console.error);
-        client.say(channel, `@${tags.username} stop spamming emotes!`);
-      }
+          else client.say(channel, command.message);
+        }
+        break;
     }
   }
-});
+})
