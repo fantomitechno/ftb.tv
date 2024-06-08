@@ -22,6 +22,5 @@ model Token {
 }
 
 model Template {
-  channel String @id @default("fantomitechno") // j'ai paniqué ok?
   title   String
 }
