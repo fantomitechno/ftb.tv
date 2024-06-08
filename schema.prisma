@@ -22,5 +22,5 @@ model Token {
 }
 
 model Template {
-  title   String
+  title   String @id
 }
