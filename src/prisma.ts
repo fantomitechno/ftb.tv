@@ -74,4 +74,24 @@ const getTemplate = async () => {
   return prisma.template.findFirst();
 }
 
-export { addCommand, listCommand, getCommand, delCommand, getToken, getTemplate }
+const getWarns = async (user: string) => {
+  return await prisma.warning.findMany({
+    where: {
+      user,
+      date: {
+        gte: new Date(Date.now() - 7 * 24 * 3600 * 1000)
+      }
+    },
+  })
+}
+
+const addWarn = async (user: string, reason: string) => {
+  await prisma.warning.create({
+    data: {
+      user,
+      reason
+    }
+  })
+}
+
+export { addCommand, listCommand, getCommand, delCommand, getToken, getTemplate, getWarns, addWarn }

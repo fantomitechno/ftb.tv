@@ -22,5 +22,13 @@ model Token {
 }
 
 model Template {
-  title   String @id
+  title String @id
+}
+
+model Warning {
+  user   String
+  date   DateTime @default(now())
+  reason String
+
+  @@id(name: "userDate", [user, date])
 }
