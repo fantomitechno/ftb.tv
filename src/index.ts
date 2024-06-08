@@ -2,7 +2,14 @@ import { ChatUserstate, Client } from "tmi.js";
 import { config } from "dotenv";
 config();
 
-import { addCommand, addWarn, delCommand, getCommand, getWarns, listCommand } from "./prisma.js";
+import {
+  addCommand,
+  addWarn,
+  delCommand,
+  getCommand,
+  getWarns,
+  listCommand,
+} from "./prisma.js";
 import { getTitle, modifyTitle } from "./helix.js";
 import { countUpperCase } from "./string.js";
 
@@ -21,8 +28,10 @@ client
   .then(() => console.log(`Connected to ${channels.length} channels!`))
   .catch(console.error);
 
-const isMod = (channel: string, state: ChatUserstate) => client.isMod(channel, state.username!) || Boolean(state.badges?.broadcaster)
-const isBypass = (channel: string, state: ChatUserstate) => isMod(channel, state) || Boolean(state.badges?.vip)
+const isMod = (channel: string, state: ChatUserstate) =>
+  client.isMod(channel, state.username!) || Boolean(state.badges?.broadcaster);
+const isBypass = (channel: string, state: ChatUserstate) =>
+  isMod(channel, state) || Boolean(state.badges?.vip);
 
 client.on("message", async (channel, state, message, self) => {
   if (self) return;
@@ -37,8 +46,7 @@ client.on("message", async (channel, state, message, self) => {
             client.raw(
               `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} created`
             );
-          }
-          else {
+          } else {
             client.raw(
               `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} already exist`
             );
@@ -50,8 +58,7 @@ client.on("message", async (channel, state, message, self) => {
           client.raw(
             `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
           );
-        }
-        else {
+        } else {
           client.raw(
             `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
           );
@@ -59,15 +66,21 @@ client.on("message", async (channel, state, message, self) => {
         break;
       case "title":
         if (!args.length) {
-          client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title is "${await getTitle()}"`)
-        }
-        else {
+          client.raw(
+            `@reply-parent-msg-id=${
+              state.id
+            } PRIVMSG ${channel} :Title is "${await getTitle()}"`
+          );
+        } else {
           if (!isMod(channel, state)) return;
           if (await modifyTitle(args.join(" "))) {
-            client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title updated`)
-          }
-          else {
-            client.raw(`@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured check logs @fantomitechno`)
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title updated`
+            );
+          } else {
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured check logs @fantomitechno`
+            );
           }
         }
         break;
@@ -76,7 +89,9 @@ client.on("message", async (channel, state, message, self) => {
       case "commands":
         const commands = await listCommand(isMod(channel, state));
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
+          `@reply-parent-msg-id=${
+            state.id
+          } PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
         );
         break;
       default:
@@ -84,9 +99,10 @@ client.on("message", async (channel, state, message, self) => {
         if (!command) return;
         if (command.isMod && !isMod(channel, state)) return;
         if (command.message) {
-          if (command.reply) client.raw(
-            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${command.message}`
-          );
+          if (command.reply)
+            client.raw(
+              `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${command.message}`
+            );
           else client.say(channel, command.message);
         }
         break;
@@ -94,12 +110,20 @@ client.on("message", async (channel, state, message, self) => {
   }
 
   if (!isBypass(channel, state)) {
-    if (message.length > 10 && countUpperCase(message) / (message.match(/[A-z]/g) ?? []).length > 0.8) {
-      const warns = await getWarns(state.username!)
+    if (
+      message.length > 10 &&
+      countUpperCase(message) / (message.match(/[A-z]/g) ?? []).length > 0.8
+    ) {
+      const warns = await getWarns(state.username!);
       if (warns.length > 5) {
-        client.timeout(channel, state.username!, 60 * warns.length, `Too many uppercase! | Warn #${warns.length + 1}`)
+        client.timeout(
+          channel,
+          state.username!,
+          60 * warns.length,
+          `Too many uppercase! | Warn #${warns.length + 1}`
+        );
       }
-      await addWarn(state.username!, "Too many uppercase")
+      await addWarn(state.username!, "Too many uppercase");
     }
   }
-})
+});
