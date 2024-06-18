@@ -21,6 +21,9 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
     devDependencies:
+      '@types/node':
+        specifier: ^20.14.5
+        version: 20.14.5
       '@types/tmi.js':
         specifier: ^1.8.6
         version: 1.8.6
@@ -56,6 +59,9 @@ packages:
 
   '@prisma/get-platform@5.15.0':
     resolution: {integrity: sha512-1GULDkW4+/VQb73vihxCBSc4Chc2x88MA+O40tcZFjmBzG4/fF44PaXFxUqKSFltxU9L9GIMLhh0Gfkk/pUbtg==}
+
+  '@types/node@20.14.5':
+    resolution: {integrity: sha512-aoRR+fJkZT2l0aGOJhuA8frnCSoNX6W7U2mpNq63+BxBIj5BQFt8rHy627kijCmm63ijdSdwvGgpUsU6MBsZZA==}
 
   '@types/tmi.js@1.8.6':
     resolution: {integrity: sha512-LVzNK7AxTMyh9qHLanAQR1o0I9XzfbIcXk85cx85igmCJHHO1Sm71sdhQ8Mj1WmRGzynPIoCXx6mVaFynWbsQw==}
@@ -94,6 +100,9 @@ packages:
     resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -140,6 +149,10 @@ snapshots:
     dependencies:
       '@prisma/debug': 5.15.0
 
+  '@types/node@20.14.5':
+    dependencies:
+      undici-types: 5.26.5
+
   '@types/tmi.js@1.8.6': {}
 
   dotenv@16.0.3: {}
@@ -166,6 +179,8 @@ snapshots:
   tr46@0.0.3: {}
 
   typescript@5.4.5: {}
+
+  undici-types@5.26.5: {}
 
   webidl-conversions@3.0.1: {}
 
