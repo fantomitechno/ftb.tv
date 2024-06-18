@@ -43,11 +43,11 @@ const listCommand = async (isMod: boolean) => {
   const dbCommands = await prisma.command.findMany();
   return isMod
     ? [
-        ...dbCommands.map((c) => c.commandName),
-        "add-com",
-        "del-com",
-        "list-com",
-      ]
+      ...dbCommands.map((c) => c.commandName),
+      "add-com",
+      "del-com",
+      "list-com",
+    ]
     : dbCommands.map((c) => c.commandName);
 };
 
@@ -85,10 +85,10 @@ const getTemplate = async () => {
   return prisma.template.findFirst();
 };
 
-const getWarns = async (user: string) => {
+const getWarns = async (userId: string) => {
   return await prisma.warning.findMany({
     where: {
-      user,
+      userId,
       date: {
         gte: new Date(Date.now() - 7 * 24 * 3600 * 1000),
       },
@@ -96,13 +96,26 @@ const getWarns = async (user: string) => {
   });
 };
 
-const addWarn = async (user: string, reason: string) => {
+const addWarn = async (userName: string, userId: string, reason: string) => {
+  await prisma.user.upsert({
+    where: {
+      id: userId
+    },
+    create: {
+      id: userId,
+      name: userName
+    },
+    update: {
+      name: userName
+    }
+  });
+
   await prisma.warning.create({
     data: {
-      user,
-      reason,
-    },
-  });
+      userId: userId,
+      reason
+    }
+  })
 };
 
 export {

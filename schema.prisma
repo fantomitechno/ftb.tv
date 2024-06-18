@@ -26,9 +26,15 @@ model Template {
 }
 
 model Warning {
-  user   String
+  id     Int      @id @default(autoincrement())
+  user   User     @relation(fields: [userId], references: [id])
   date   DateTime @default(now())
   reason String
+  userId String
+}
 
-  @@id(name: "userDate", [user, date])
+model User {
+  name    String
+  id      String    @id
+  Warning Warning[]
 }
