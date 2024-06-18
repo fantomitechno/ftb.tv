@@ -2,16 +2,6 @@ import { ChatUserstate, Client } from "tmi.js";
 import { config } from "dotenv";
 config();
 
-import {
-  addCommand,
-  addWarn,
-  delCommand,
-  getCommand,
-  getWarns,
-  listCommand,
-} from "./prisma.js";
-import { getTitle, modifyTitle } from "./helix.js";
-import { countUpperCase } from "./string.js";
 import { executeCommand } from "./command.js";
 import { executeAutomod } from "./automod.js";
 

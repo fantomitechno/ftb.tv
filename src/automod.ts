@@ -1,6 +1,6 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getWarns, addWarn } from "./prisma";
-import { countUpperCase } from "./string";
+import { getWarns, addWarn } from "./prisma.js";
+import { countUpperCase } from "./string.js";
 
 const warn = async (client: Client, channel: string, state: ChatUserstate, reason: string, publicText: string, deleteMessage: boolean = true) => {
   const warns = await getWarns(state["user-id"]!);

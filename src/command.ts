@@ -1,6 +1,6 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getTitle, modifyTitle } from "./helix";
-import { addCommand, delCommand, listCommand, getCommand } from "./prisma";
+import { getTitle, modifyTitle } from "./helix.js";
+import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
 
 export const executeCommand = async (commandRaw: string, args: string[], channel: string, state: ChatUserstate, client: Client, isMod: boolean) => {
   switch (commandRaw) {
