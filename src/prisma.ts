@@ -2,11 +2,12 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const addCommand = async (commandName: string, message: string) => {
+const addCommand = async (channelId: string, commandName: string, message: string) => {
   if (
     await prisma.command.findFirst({
       where: {
         commandName,
+        channelId
       },
     })
   ) {
@@ -16,12 +17,13 @@ const addCommand = async (commandName: string, message: string) => {
     data: {
       commandName,
       message,
+      channelId
     },
   });
   return true;
 };
 
-const delCommand = async (commandName: string) => {
+const delCommand = async (channelId: string, commandName: string) => {
   if (
     !(await prisma.command.findFirst({
       where: {
@@ -33,29 +35,45 @@ const delCommand = async (commandName: string) => {
   }
   await prisma.command.delete({
     where: {
-      commandName,
+      channelCommand: {
+        channelId,
+        commandName
+      }
     },
   });
   return true;
 };
 
-const listCommand = async (isMod: boolean) => {
-  const dbCommands = await prisma.command.findMany();
+const listCommand = async (channelId: string, isMod: boolean) => {
+  const dbCommands = await prisma.command.findMany({
+    where: {
+      channelId,
+      OR: [
+        {
+          isMod: isMod
+        },
+        {
+          isMod: false
+        }
+      ]
+    }
+  });
   return isMod
     ? [
       ...dbCommands.map((c) => c.commandName),
       "add-com",
       "del-com",
       "list-com",
+      "title"
     ]
     : dbCommands.map((c) => c.commandName);
 };
 
-const getCommand = async (commandName: string) => {
-  return await prisma.command.findFirst({ where: { commandName } });
+const getCommand = async (channelId: string, commandName: string) => {
+  return await prisma.command.findFirst({ where: { commandName, channelId } });
 };
 
-const getToken = async () => {
+const getToken = async (channelId: string) => {
   let token = await prisma.token.findFirst();
   if (!token) throw new Error("No token");
   if (token.createdAt.getDate() + token.expiresIn * 1000 < Date.now()) {
@@ -74,6 +92,7 @@ const getToken = async () => {
     await prisma.token.update({
       where: {
         accessToken: oldAccessToken,
+        channelId
       },
       data: token,
     });
@@ -81,14 +100,15 @@ const getToken = async () => {
   return token.accessToken;
 };
 
-const getTemplate = async () => {
-  return prisma.template.findFirst();
+const getSettings = async (channelId: string) => {
+  return prisma.settings.findFirst({ where: { channelId } });
 };
 
-const getWarns = async (userId: string) => {
+const getWarns = async (userId: string, channelId: string) => {
   return await prisma.warning.findMany({
     where: {
       userId,
+      channelId,
       date: {
         gte: new Date(Date.now() - 7 * 24 * 3600 * 1000),
       },
@@ -96,7 +116,7 @@ const getWarns = async (userId: string) => {
   });
 };
 
-const addWarn = async (userName: string, userId: string, reason: string) => {
+const addWarn = async (channelId: string, userName: string, userId: string, reason: string) => {
   await prisma.user.upsert({
     where: {
       id: userId
@@ -112,6 +132,7 @@ const addWarn = async (userName: string, userId: string, reason: string) => {
 
   await prisma.warning.create({
     data: {
+      channelId,
       userId: userId,
       reason
     }
@@ -124,7 +145,7 @@ export {
   getCommand,
   delCommand,
   getToken,
-  getTemplate,
+  getSettings,
   getWarns,
   addWarn,
 };

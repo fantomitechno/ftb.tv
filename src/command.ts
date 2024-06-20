@@ -3,10 +3,11 @@ import { getTitle, modifyTitle } from "./helix.js";
 import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
 
 export const executeCommand = async (commandRaw: string, args: string[], channel: string, state: ChatUserstate, client: Client, isMod: boolean) => {
+  const channelId = state["room-id"]!
   switch (commandRaw) {
     case "add-com":
       if (isMod) {
-        if (await addCommand(args[0], args.slice(1).join(" "))) {
+        if (await addCommand(channelId, args[0], args.slice(1).join(" "))) {
           client.raw(
             `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} created`
           );
@@ -18,7 +19,7 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       }
       break;
     case "del-com":
-      if (await delCommand(args[0])) {
+      if (await delCommand(channelId, args[0])) {
         client.raw(
           `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
         );
@@ -32,11 +33,11 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       if (!args.length) {
         client.raw(
           `@reply-parent-msg-id=${state.id
-          } PRIVMSG ${channel} :Title is "${await getTitle()}"`
+          } PRIVMSG ${channel} :Title is "${await getTitle(channelId)}"`
         );
       } else {
         if (!isMod) return;
-        if (await modifyTitle(args.join(" "))) {
+        if (await modifyTitle(channelId, args.join(" "))) {
           client.raw(
             `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Title updated`
           );
@@ -50,14 +51,14 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
     case "list-com":
     case "help":
     case "commands":
-      const commands = await listCommand(isMod);
+      const commands = await listCommand(channelId, isMod);
       client.raw(
         `@reply-parent-msg-id=${state.id
         } PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
       );
       break;
     default:
-      const command = await getCommand(commandRaw);
+      const command = await getCommand(channelId, commandRaw);
       if (!command) return;
       if (command.isMod && !isMod) return;
       if (command.message) {
