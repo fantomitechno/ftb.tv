@@ -64,8 +64,12 @@ const listCommand = async (channelId: string, isMod: boolean) => {
       "add-com",
       "del-com",
       "list-com",
-      "title"
-    ]
+      "title",
+      "followmod",
+      "emotemod",
+      "submod",
+      "slowmod"
+    ].sort()
     : dbCommands.map((c) => c.commandName);
 };
 
@@ -97,7 +101,7 @@ const getToken = async (channelId: string) => {
       data: token,
     });
   }
-  return token.accessToken;
+  return token;
 };
 
 const getSettings = async (channelId: string) => {

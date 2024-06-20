@@ -1,11 +1,13 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getTitle, modifyTitle } from "./helix.js";
+import { getChatSettings, getTitle, modifyChatSettings, modifyTitle } from "./helix.js";
 import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
+
+const cooldownManager: { [command: string]: number } = {};
 
 export const executeCommand = async (commandRaw: string, args: string[], channel: string, state: ChatUserstate, client: Client, isMod: boolean) => {
   const channelId = state["room-id"]!
   switch (commandRaw) {
-    case "add-com":
+    case "add-com": {
       if (isMod) {
         if (await addCommand(channelId, args[0], args.slice(1).join(" "))) {
           client.raw(
@@ -18,18 +20,22 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
         }
       }
       break;
-    case "del-com":
-      if (await delCommand(channelId, args[0])) {
-        client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
-        );
-      } else {
-        client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
-        );
+    }
+    case "del-com": {
+      if (isMod) {
+        if (await delCommand(channelId, args[0])) {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} deleted`
+          );
+        } else {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Command ${args[0]} doesn't exist`
+          );
+        }
       }
       break;
-    case "title":
+    }
+    case "title": {
       if (!args.length) {
         client.raw(
           `@reply-parent-msg-id=${state.id
@@ -48,18 +54,100 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
         }
       }
       break;
+    }
+    case "slowmode": {
+      if (!isMod) return;
+      const chatSettings = await getChatSettings(channelId);
+      if (chatSettings.slow_mode) {
+        await modifyChatSettings(channelId, { slow_mode: false });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed slowmod`
+        );
+      } else {
+        let time = Number(args[0]);
+        if (isNaN(time)) {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${args[0]} is not a valid number`
+          );
+          return;
+        }
+        await modifyChatSettings(channelId, { slow_mode: true, slow_mode_wait_time: time });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Slowmode is now at ${time}s`
+        );
+      }
+      break;
+    }
+    case "submod": {
+      if (!isMod) return;
+      const chatSettings = await getChatSettings(channelId);
+      if (chatSettings.subscriber_mode) {
+        await modifyChatSettings(channelId, { subscriber_mode: false });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed submod`
+        );
+      } else {
+        await modifyChatSettings(channelId, { subscriber_mode: true });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Submod is now active`
+        );
+      }
+      break;
+    }
+    case "followmod": {
+      if (!isMod) return;
+      const chatSettings = await getChatSettings(channelId);
+      if (chatSettings.follower_mode) {
+        await modifyChatSettings(channelId, { follower_mode: false });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed followmod`
+        );
+      } else {
+        let time = Number(args[0]);
+        if (isNaN(time)) {
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${args[0]} is not a valid number`
+          );
+          return;
+        }
+        await modifyChatSettings(channelId, { follower_mode: true, follower_mode_duration: time });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Followmode is now at ${time}m`
+        );
+      }
+      break;
+    }
+    case "emotemod": {
+      if (!isMod) return;
+      const chatSettings = await getChatSettings(channelId);
+      if (chatSettings.emote_mode) {
+        await modifyChatSettings(channelId, { emote_mode: false });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed emotemod`
+        );
+      } else {
+        await modifyChatSettings(channelId, { emote_mode: true });
+        client.raw(
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Emotemode is now active`
+        );
+      }
+      break;
+    }
     case "list-com":
     case "help":
-    case "commands":
+    case "commands": {
       const commands = await listCommand(channelId, isMod);
       client.raw(
         `@reply-parent-msg-id=${state.id
         } PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
       );
       break;
-    default:
+    }
+    default: {
+      const cooldown = cooldownManager[commandRaw];
       const command = await getCommand(channelId, commandRaw);
       if (!command) return;
+      if (cooldown && cooldown + command.cooldown * 1000 > Date.now()) return;
       if (command.isMod && !isMod) return;
       if (command.message) {
         if (command.reply)
@@ -69,5 +157,6 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
         else client.say(channel, command.message);
       }
       break;
+    }
   }
 }

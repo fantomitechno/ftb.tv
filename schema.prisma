@@ -13,6 +13,7 @@ model Command {
   message     String?
   reply       Boolean @default(true)
   isMod       Boolean @default(false)
+  cooldown    Int     @default(10)
 
   @@id(name: "channelCommand", [channelId, commandName])
 }
@@ -33,7 +34,7 @@ model Settings {
 }
 
 model Warning {
-  channelId String   
+  channelId String
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [id])
   date      DateTime @default(now())
