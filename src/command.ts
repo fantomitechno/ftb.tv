@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getChatSettings, getTitle, modifyChatSettings, modifyTitle } from "./helix.js";
+import { getChatSettings, getTitle, giveShoutout, modifyChatSettings, modifyTitle, sendAnnouncement } from "./helix.js";
 import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
 
 const cooldownManager: { [command: string]: number } = {};
@@ -49,9 +49,37 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
           );
         } else {
           client.raw(
-            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured check logs @fantomitechno`
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Tell fantomitechno there's a problem with my program`
           );
         }
+      }
+      break;
+    }
+    case "so": {
+      if (!isMod || !args[0]) return;
+      const shoutout = args[0].replace("@", "");
+      switch (await giveShoutout(channelId, shoutout)) {
+        case 200:
+          sendAnnouncement(channelId, "Join us following https://twitch.tv/" + shoutout)
+          break;
+
+        case 404:
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${shoutout} is not a valid streamer`
+          );
+          break;
+
+        case 400:
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Not streaming, skill issue`
+          );
+          break;
+
+        default:
+          client.raw(
+            `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Tell fantomitechno there's a problem with my program`
+          );
+          break;
       }
       break;
     }
@@ -61,7 +89,7 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       if (chatSettings.slow_mode) {
         await modifyChatSettings(channelId, { slow_mode: false });
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed slowmod`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed slowmode`
         );
       } else {
         let time = Number(args[0]);
@@ -78,29 +106,29 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       }
       break;
     }
-    case "submod": {
+    case "submode": {
       if (!isMod) return;
       const chatSettings = await getChatSettings(channelId);
       if (chatSettings.subscriber_mode) {
         await modifyChatSettings(channelId, { subscriber_mode: false });
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed submod`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed submode`
         );
       } else {
         await modifyChatSettings(channelId, { subscriber_mode: true });
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Submod is now active`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Submode is now active`
         );
       }
       break;
     }
-    case "followmod": {
+    case "followmode": {
       if (!isMod) return;
       const chatSettings = await getChatSettings(channelId);
       if (chatSettings.follower_mode) {
         await modifyChatSettings(channelId, { follower_mode: false });
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed followmod`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed followmode`
         );
       } else {
         let time = Number(args[0]);
@@ -117,13 +145,13 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       }
       break;
     }
-    case "emotemod": {
+    case "emotemode": {
       if (!isMod) return;
       const chatSettings = await getChatSettings(channelId);
       if (chatSettings.emote_mode) {
         await modifyChatSettings(channelId, { emote_mode: false });
         client.raw(
-          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed emotemod`
+          `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Removed emotemode`
         );
       } else {
         await modifyChatSettings(channelId, { emote_mode: true });

@@ -47,6 +47,7 @@ const getTitle = async (channelId: string) => {
       headers: {
         Authorization: `Bearer ${token.accessToken}`,
         "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
       },
     }
   );
@@ -55,34 +56,36 @@ const getTitle = async (channelId: string) => {
 };
 
 const modifyChatSettings = async (channelId: string, options: ChatSettings) => {
-  const token = await getToken(channelId);
+  const userId = await getUserId()
 
   const req = await fetch(
-    "https://api.twitch.tv/helix/channels?broadcaster_id=" + channelId,
+    `https://api.twitch.tv/helix/chat/settings?broadcaster_id=${channelId}&moderator_id=${userId}`,
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${token.accessToken}`,
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
         "Client-Id": process.env.TWITCH_ID!,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(options),
     }
   );
+  const json = await req.json();
 
-  return (await req.json()).data[0] as ChatSettings;
+  if (!req.ok) console.log(json);
+
+  return json.data[0] as ChatSettings;
 }
 
 const getChatSettings = async (channelId: string) => {
-  const token = await getToken(channelId);
-
   const req = await fetch(
     "https://api.twitch.tv/helix/chat/settings?broadcaster_id=" + channelId,
     {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token.accessToken}`,
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
         "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
       },
     }
   );
@@ -90,4 +93,63 @@ const getChatSettings = async (channelId: string) => {
   return (await req.json()).data[0] as ChatSettings;
 }
 
-export { modifyTitle, getTitle, modifyChatSettings, getChatSettings };
+const getUserId = async (login?: string) => {
+  const req = await fetch("https://api.twitch.tv/helix/users" + (login ? "?login=" + login : ""),
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = (await req.json()).data[0];
+  return data?.id;
+}
+
+const sendAnnouncement = async (channelId: string, message: string, color?: "blue" | "orange" | "primary" | "purple" | "green") => {
+  const userId = await getUserId();
+  await fetch(
+    `https://api.twitch.tv/helix/chat/announcements?broadcaster_id=${channelId}&moderator_id=${userId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message, color })
+    }
+  )
+}
+
+const giveShoutout = async (channelId: string, shoutout: string) => {
+  const shoutoutId = await getUserId(shoutout);
+  if (!shoutoutId) return 404;
+  const userId = await getUserId();
+  const res = await fetch(
+    `https://api.twitch.tv/helix/chat/shoutouts?from_broadcaster_id=${channelId}&moderator_id=${userId}&to_broadcaster_id=${shoutoutId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+      },
+    }
+  );
+  if (res.status !== 204) {
+    switch (res.status) {
+      case 400:
+        return 400;
+
+      default:
+        console.log(await res.json());
+        return -1;
+    }
+  }
+  return 200;
+}
+
+export { modifyTitle, getTitle, modifyChatSettings, getChatSettings, giveShoutout, sendAnnouncement };

@@ -10,7 +10,7 @@ const channels = process.env.CHANNELS?.split(",") ?? [];
 const client = new Client({
   identity: {
     username: process.env.CLIENT,
-    password: process.env.CLIENT_TOKEN,
+    password: "oauth:" + process.env.CLIENT_TOKEN,
   },
   channels,
 });
