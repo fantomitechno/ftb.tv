@@ -165,4 +165,5 @@ export {
   getChatSettings,
   giveShoutout,
   sendAnnouncement,
+  getUserId
 };

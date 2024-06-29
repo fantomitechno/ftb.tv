@@ -4,9 +4,10 @@ config();
 
 import { executeCommand } from "./command.js";
 import { executeAutomod } from "./automod.js";
-import { processMessage } from "./timer.js";
+import { init, processMessage } from "./timer.js";
+import { getUserId } from "./helix.js";
 
-const channels = process.env.CHANNELS?.split(",") ?? [];
+const channels = process.env.CHANNELS!.split(",");
 
 const client = new Client({
   identity: {
@@ -18,7 +19,13 @@ const client = new Client({
 
 client
   .connect()
-  .then(() => console.log(`Connected to ${channels.length} channels!`))
+  .then(async () => {
+    console.log(`Connected to ${channels.length} channels!`)
+    for (const channel of channels) {
+      const channelId = await getUserId(channel)
+      await init(client, channelId, channel);
+    }
+  })
   .catch(console.error);
 
 const isMod = (channel: string, state: ChatUserstate) =>
