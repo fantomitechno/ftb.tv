@@ -1,5 +1,5 @@
 import { Client } from "tmi.js";
-import { getTimer, getTimers } from "./prisma";
+import { getTimer, getTimers } from "./prisma.js";
 import { Timer } from "@prisma/client";
 
 const intervalsForChannel: { [channel: string]: NodeJS.Timeout[] } = {};
@@ -34,19 +34,23 @@ const processMessage = async (
   channel: string,
   channelId: string
 ) => {
-  for (const key of Object.keys(
-    numberOfMessagesSinceLast[channel]
-  ) as unknown as number[]) {
-    numberOfMessagesSinceLast[channel][key] += 1;
+  if (numberOfMessagesSinceLast[channel]) {
+    for (const key of Object.keys(
+      numberOfMessagesSinceLast[channel]
+    ) as unknown as number[]) {
+      numberOfMessagesSinceLast[channel][key] += 1;
+    }
   }
   const waitings = waitingForMessages[channel];
-  for (const key of Object.keys(waitings) as unknown as number[]) {
-    waitings[key] -= 1;
-    if (waitings[key] === 0) {
-      const timer = await getTimer(channelId, key);
-      if (timer) {
-        client.say(channel, timer.message);
-        intervalsForChannel[channel].push(createInterval(client, timer, channel));
+  if (waitings) {
+    for (const key of Object.keys(waitings) as unknown as number[]) {
+      waitings[key] -= 1;
+      if (waitings[key] === 0) {
+        const timer = await getTimer(channelId, key);
+        if (timer) {
+          client.say(channel, timer.message);
+          intervalsForChannel[channel].push(createInterval(client, timer, channel));
+        }
       }
     }
   }
@@ -67,7 +71,7 @@ const createInterval = (client: Client, timer: Timer, channel: string) => {
       const index = intervalsForChannel[channel].indexOf(interval);
       if (index > -1) intervalsForChannel[channel].splice(index, 1);
     }
-  }, timer.repeatTime);
+  }, timer.repeatTime * 1000);
   return interval;
 }
 

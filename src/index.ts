@@ -4,6 +4,7 @@ config();
 
 import { executeCommand } from "./command.js";
 import { executeAutomod } from "./automod.js";
+import { processMessage } from "./timer.js";
 
 const channels = process.env.CHANNELS?.split(",") ?? [];
 
@@ -44,4 +45,6 @@ client.on("message", async (channel, state, message, self) => {
   if (!isBypass(channel, state)) {
     executeAutomod(message, state, channel, client);
   }
+
+  processMessage(client, channel, state["room-id"]!);
 });
