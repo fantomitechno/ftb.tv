@@ -185,6 +185,13 @@ export const executeCommand = async (
       }
       break;
     }
+    case "timerr":
+    case "timer-reload": {
+      init(client, channelId, channel)
+      client.raw(
+        `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Reloaded timers`
+      );
+    }
     case "list-com":
     case "help":
     case "commands": {
