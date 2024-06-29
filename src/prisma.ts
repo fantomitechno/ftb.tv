@@ -2,12 +2,16 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const addCommand = async (channelId: string, commandName: string, message: string) => {
+const addCommand = async (
+  channelId: string,
+  commandName: string,
+  message: string
+) => {
   if (
     await prisma.command.findFirst({
       where: {
         commandName,
-        channelId
+        channelId,
       },
     })
   ) {
@@ -17,7 +21,7 @@ const addCommand = async (channelId: string, commandName: string, message: strin
     data: {
       commandName,
       message,
-      channelId
+      channelId,
     },
   });
   return true;
@@ -37,8 +41,8 @@ const delCommand = async (channelId: string, commandName: string) => {
     where: {
       channelCommand: {
         channelId,
-        commandName
-      }
+        commandName,
+      },
     },
   });
   return true;
@@ -50,13 +54,13 @@ const listCommand = async (channelId: string, isMod: boolean) => {
       channelId,
       OR: [
         {
-          isMod: isMod
+          isMod: isMod,
         },
         {
-          isMod: false
-        }
-      ]
-    }
+          isMod: false,
+        },
+      ],
+    },
   });
   return isMod
     ? [
@@ -69,7 +73,8 @@ const listCommand = async (channelId: string, isMod: boolean) => {
       "followmode",
       "emotemode",
       "submode",
-      "slowmode"
+      "slowmode",
+      "timer-reload"
     ].sort()
     : dbCommands.map((c) => c.commandName);
 };
@@ -97,7 +102,7 @@ const getToken = async (channelId: string) => {
     await prisma.token.update({
       where: {
         accessToken: oldAccessToken,
-        channelId
+        channelId,
       },
       data: token,
     });
@@ -121,32 +126,41 @@ const getWarns = async (userId: string, channelId: string) => {
   });
 };
 
-const addWarn = async (channelId: string, userName: string, userId: string, reason: string) => {
+const addWarn = async (
+  channelId: string,
+  userName: string,
+  userId: string,
+  reason: string
+) => {
   await prisma.user.upsert({
     where: {
-      id: userId
+      id: userId,
     },
     create: {
       id: userId,
-      name: userName
+      name: userName,
     },
     update: {
-      name: userName
-    }
+      name: userName,
+    },
   });
 
   await prisma.warning.create({
     data: {
       channelId,
       userId: userId,
-      reason
-    }
-  })
+      reason,
+    },
+  });
 };
 
 const getTimers = async (channelId: string) => {
   return prisma.timer.findMany({ where: { channelId } });
-}
+};
+
+const getTimer = async (channelId: string, timerId: number) => {
+  return prisma.timer.findFirst({ where: { channelId, id: timerId } });
+};
 
 export {
   addCommand,
@@ -157,5 +171,6 @@ export {
   getSettings,
   getWarns,
   addWarn,
-  getTimers
+  getTimers,
+  getTimer,
 };

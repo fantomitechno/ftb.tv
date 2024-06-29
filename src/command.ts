@@ -1,11 +1,26 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getChatSettings, getTitle, giveShoutout, modifyChatSettings, modifyTitle, sendAnnouncement } from "./helix.js";
+import {
+  getChatSettings,
+  getTitle,
+  giveShoutout,
+  modifyChatSettings,
+  modifyTitle,
+  sendAnnouncement,
+} from "./helix.js";
 import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
+import { init } from "./timer.js";
 
 const cooldownManager: { [command: string]: number } = {};
 
-export const executeCommand = async (commandRaw: string, args: string[], channel: string, state: ChatUserstate, client: Client, isMod: boolean) => {
-  const channelId = state["room-id"]!
+export const executeCommand = async (
+  commandRaw: string,
+  args: string[],
+  channel: string,
+  state: ChatUserstate,
+  client: Client,
+  isMod: boolean
+) => {
+  const channelId = state["room-id"]!;
   switch (commandRaw) {
     case "add-com": {
       if (isMod) {
@@ -60,7 +75,10 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       const shoutout = args[0].replace("@", "");
       switch (await giveShoutout(channelId, shoutout)) {
         case 200:
-          sendAnnouncement(channelId, "Join us following https://twitch.tv/" + shoutout)
+          sendAnnouncement(
+            channelId,
+            "Join us following https://twitch.tv/" + shoutout
+          );
           break;
 
         case 404:
@@ -99,7 +117,10 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
           );
           return;
         }
-        await modifyChatSettings(channelId, { slow_mode: true, slow_mode_wait_time: time });
+        await modifyChatSettings(channelId, {
+          slow_mode: true,
+          slow_mode_wait_time: time,
+        });
         client.raw(
           `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Slowmode is now at ${time}s`
         );
@@ -138,7 +159,10 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
           );
           return;
         }
-        await modifyChatSettings(channelId, { follower_mode: true, follower_mode_duration: time });
+        await modifyChatSettings(channelId, {
+          follower_mode: true,
+          follower_mode_duration: time,
+        });
         client.raw(
           `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Followmode is now at ${time}m`
         );
@@ -187,4 +211,4 @@ export const executeCommand = async (commandRaw: string, args: string[], channel
       break;
     }
   }
-}
+};

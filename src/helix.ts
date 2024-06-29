@@ -1,18 +1,19 @@
 import { getSettings, getToken } from "./prisma.js";
 
 interface ChatSettings {
-  slow_mode?: boolean
-  slow_mode_wait_time?: any
-  follower_mode?: boolean
-  follower_mode_duration?: number
-  subscriber_mode?: boolean
-  emote_mode?: boolean
+  slow_mode?: boolean;
+  slow_mode_wait_time?: any;
+  follower_mode?: boolean;
+  follower_mode_duration?: number;
+  subscriber_mode?: boolean;
+  emote_mode?: boolean;
 }
-
 
 const modifyTitle = async (channelId: string, newTitle: string) => {
   const settings = await getSettings(channelId);
-  const title = settings?.title.length ? settings.title.replace("{}", newTitle) : newTitle;
+  const title = settings?.title.length
+    ? settings.title.replace("{}", newTitle)
+    : newTitle;
 
   const token = await getToken(channelId);
 
@@ -56,7 +57,7 @@ const getTitle = async (channelId: string) => {
 };
 
 const modifyChatSettings = async (channelId: string, options: ChatSettings) => {
-  const userId = await getUserId()
+  const userId = await getUserId();
 
   const req = await fetch(
     `https://api.twitch.tv/helix/chat/settings?broadcaster_id=${channelId}&moderator_id=${userId}`,
@@ -75,7 +76,7 @@ const modifyChatSettings = async (channelId: string, options: ChatSettings) => {
   if (!req.ok) console.log(json);
 
   return json.data[0] as ChatSettings;
-}
+};
 
 const getChatSettings = async (channelId: string) => {
   const req = await fetch(
@@ -91,10 +92,11 @@ const getChatSettings = async (channelId: string) => {
   );
 
   return (await req.json()).data[0] as ChatSettings;
-}
+};
 
 const getUserId = async (login?: string) => {
-  const req = await fetch("https://api.twitch.tv/helix/users" + (login ? "?login=" + login : ""),
+  const req = await fetch(
+    "https://api.twitch.tv/helix/users" + (login ? "?login=" + login : ""),
     {
       method: "GET",
       headers: {
@@ -107,9 +109,13 @@ const getUserId = async (login?: string) => {
 
   const data = (await req.json()).data[0];
   return data?.id;
-}
+};
 
-const sendAnnouncement = async (channelId: string, message: string, color?: "blue" | "orange" | "primary" | "purple" | "green") => {
+const sendAnnouncement = async (
+  channelId: string,
+  message: string,
+  color?: "blue" | "orange" | "primary" | "purple" | "green"
+) => {
   const userId = await getUserId();
   await fetch(
     `https://api.twitch.tv/helix/chat/announcements?broadcaster_id=${channelId}&moderator_id=${userId}`,
@@ -120,10 +126,10 @@ const sendAnnouncement = async (channelId: string, message: string, color?: "blu
         "Client-Id": process.env.TWITCH_ID!,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message, color })
+      body: JSON.stringify({ message, color }),
     }
-  )
-}
+  );
+};
 
 const giveShoutout = async (channelId: string, shoutout: string) => {
   const shoutoutId = await getUserId(shoutout);
@@ -150,6 +156,13 @@ const giveShoutout = async (channelId: string, shoutout: string) => {
     }
   }
   return 200;
-}
+};
 
-export { modifyTitle, getTitle, modifyChatSettings, getChatSettings, giveShoutout, sendAnnouncement };
+export {
+  modifyTitle,
+  getTitle,
+  modifyChatSettings,
+  getChatSettings,
+  giveShoutout,
+  sendAnnouncement,
+};

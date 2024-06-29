@@ -31,7 +31,14 @@ client.on("message", async (channel, state, message, self) => {
   if (message.startsWith(process.env.PREFIX ?? "!")) {
     const [command, ...args] = message.slice(1).split(" ");
 
-    executeCommand(command, args, channel, state, client, isMod(channel, state));
+    executeCommand(
+      command,
+      args,
+      channel,
+      state,
+      client,
+      isMod(channel, state)
+    );
   }
 
   if (!isBypass(channel, state)) {

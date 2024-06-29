@@ -14,10 +14,6 @@
   "ts-node": {
     "pretty": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "src/test.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["src/test.ts"]
 }
