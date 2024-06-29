@@ -45,9 +45,12 @@ const processMessage = async (
   if (waitings) {
     for (const key of Object.keys(waitings) as unknown as number[]) {
       waitings[key] -= 1;
-      if (waitings[key] === 0) {
-        const timer = await getTimer(channelId, key);
+      if (waitings[key] <= 0) {
+        delete waitings[key];
+        const timer = await getTimer(channelId, Number(key));
+        console.log(timer)
         if (timer) {
+          numberOfMessagesSinceLast[channel][key] = 0;
           client.say(channel, timer.message);
           intervalsForChannel[channel].push(createInterval(client, timer, channel));
         }
@@ -57,10 +60,10 @@ const processMessage = async (
 };
 
 const createInterval = (client: Client, timer: Timer, channel: string) => {
-  const interval = setTimeout(() => {
+  const interval = setInterval(() => {
     if (
       !timer.nbMessage ||
-      numberOfMessagesSinceLast[channel][timer.id] > timer.nbMessage
+      numberOfMessagesSinceLast[channel][timer.id] >= timer.nbMessage
     ) {
       client.say(channel, timer.message);
       numberOfMessagesSinceLast[channel][timer.id] = 0;

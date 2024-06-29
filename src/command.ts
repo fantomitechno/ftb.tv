@@ -187,10 +187,11 @@ export const executeCommand = async (
     }
     case "timerr":
     case "timer-reload": {
-      init(client, channelId, channel)
+      await init(client, channelId, channel)
       client.raw(
         `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Reloaded timers`
       );
+      break;
     }
     case "list-com":
     case "help":
