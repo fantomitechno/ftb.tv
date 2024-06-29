@@ -65,10 +65,11 @@ const listCommand = async (channelId: string, isMod: boolean) => {
       "del-com",
       "list-com",
       "title",
-      "followmod",
-      "emotemod",
-      "submod",
-      "slowmod"
+      "so",
+      "followmode",
+      "emotemode",
+      "submode",
+      "slowmode"
     ].sort()
     : dbCommands.map((c) => c.commandName);
 };
@@ -143,6 +144,10 @@ const addWarn = async (channelId: string, userName: string, userId: string, reas
   })
 };
 
+const getTimers = async (channelId: string) => {
+  return prisma.timer.findMany({ where: { channelId } });
+}
+
 export {
   addCommand,
   listCommand,
@@ -152,4 +157,5 @@ export {
   getSettings,
   getWarns,
   addWarn,
+  getTimers
 };

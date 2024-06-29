@@ -47,3 +47,11 @@ model User {
   id      String    @id
   Warning Warning[]
 }
+
+model Timer {
+  channelId  String
+  id         Int    @id @default(autoincrement())
+  repeatTime Int
+  message    String
+  nbMessage  Int?
+}
