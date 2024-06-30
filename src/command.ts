@@ -1,4 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
+
 import {
   getChatSettings,
   getTitle,

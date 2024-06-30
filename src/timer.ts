@@ -1,6 +1,8 @@
 import { Client } from "tmi.js";
-import { getTimer, getTimers } from "./prisma.js";
 import { Timer } from "@prisma/client";
+
+import { getTimer, getTimers } from "./prisma.js";
+import { checkIfStreaming } from "./helix.js";
 
 const intervalsForChannel: { [channel: string]: NodeJS.Timeout[] } = {};
 
@@ -23,7 +25,7 @@ const init = async (client: Client, channelId: string, channel: string) => {
 
   intervalsForChannel[channel] = dbTimers.map((timer) => {
     numberOfMessagesSinceLast[channel][timer.id] = 0;
-    return createInterval(client, timer, channel);
+    return createInterval(client, timer, channel, channelId);
   });
 };
 
@@ -51,21 +53,21 @@ const processMessage = async (
         console.log(timer)
         if (timer) {
           numberOfMessagesSinceLast[channel][key] = 0;
-          client.say(channel, timer.message);
-          intervalsForChannel[channel].push(createInterval(client, timer, channel));
+          sendMessage(client, channel, channelId, timer.message);
+          intervalsForChannel[channel].push(createInterval(client, timer, channel, channelId));
         }
       }
     }
   }
 };
 
-const createInterval = (client: Client, timer: Timer, channel: string) => {
+const createInterval = (client: Client, timer: Timer, channel: string, channelId: string) => {
   const interval = setInterval(() => {
     if (
       !timer.nbMessage ||
       numberOfMessagesSinceLast[channel][timer.id] >= timer.nbMessage
     ) {
-      client.say(channel, timer.message);
+      sendMessage(client, channel, channelId, timer.message);
       numberOfMessagesSinceLast[channel][timer.id] = 0;
     } else {
       waitingForMessages[channel][timer.id] =
@@ -76,6 +78,12 @@ const createInterval = (client: Client, timer: Timer, channel: string) => {
     }
   }, timer.repeatTime * 1000);
   return interval;
+}
+
+const sendMessage = async (client: Client, channel: string, channelId: string, message: string) => {
+  if (await checkIfStreaming(channelId)) {
+    client.say(channel, message);
+  }
 }
 
 export {
