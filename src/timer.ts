@@ -25,8 +25,6 @@ const init = async (client: Client, channelId: string, channel: string) => {
     };
     return createInterval(client, timer, channel, channelId);
   });
-
-  console.log(intervalsForChannels)
 };
 
 const processMessage = async (
