@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "prettier": "prettier **.json src --write",
-    "start": "node ."
+    "start": "node .",
+    "dev": "pnpm build && pnpm start"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",
