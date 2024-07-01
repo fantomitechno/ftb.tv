@@ -176,6 +176,24 @@ const giveShoutout = async (channelId: string, shoutout: string) => {
   return 200;
 };
 
+const deleteMessage = async (channelId: string, messageId: string) => {
+  const modId = await getUserId();
+  const res = await fetch(`
+    https://api.twitch.tv/helix/moderation/chat?broadcaster_id=${channelId}&moderator_id=${modId}&message_id=${messageId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+      },
+    }
+  )
+
+  if (res.status != 200) {
+    console.error(`User doesn't have mod power at ${channelId}`)
+  }
+}
+
 export {
   modifyTitle,
   getTitle,
@@ -184,5 +202,6 @@ export {
   giveShoutout,
   sendAnnouncement,
   getUserId,
-  checkIfStreaming
+  checkIfStreaming,
+  deleteMessage
 };

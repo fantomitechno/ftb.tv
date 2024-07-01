@@ -30,7 +30,8 @@ model Settings {
   channelId     String  @id
   title         String  @default("{}")
   antiUpperCase Boolean @default(true)
-  antiDuplicate Boolean @default(true)
+  antiDuplicate Boolean @default(true) 
+  warnsBeforeBan Int     @default(5)
 }
 
 model Warning {

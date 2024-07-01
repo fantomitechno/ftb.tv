@@ -2,6 +2,7 @@ import { ChatUserstate, Client } from "tmi.js";
 
 import { getWarns, addWarn, getSettings } from "./prisma.js";
 import { countUpperCase } from "./string.js";
+import { deleteMessage } from "./helix.js";
 
 const warn = async (
   client: Client,
@@ -10,10 +11,11 @@ const warn = async (
   state: ChatUserstate,
   reason: string,
   publicText: string,
-  deleteMessage: boolean = true
+  maxWarn: number,
+  deleteMsg: boolean = true
 ) => {
   const warns = await getWarns(channelId, state["user-id"]!);
-  if (warns.length > 5) {
+  if (warns.length > maxWarn) {
     client.timeout(
       channel,
       state.username!,
@@ -23,7 +25,7 @@ const warn = async (
   } else {
     await client.say(channel, `${state["display-name"]}, ${publicText}`);
   }
-  if (deleteMessage) await client.deletemessage(channel, state.id!);
+  if (deleteMsg) await deleteMessage(channel, state.id!);
   await addWarn(channelId, state.username!, state["user-id"]!, reason);
 };
 
@@ -37,6 +39,7 @@ export const executeAutomod = async (
   const settings = (await getSettings(channelId)) ?? {
     antiDuplicate: true,
     antiUpperCase: true,
+    warnBeforeBan: 5
   };
   if (
     settings.antiUpperCase &&
@@ -49,7 +52,8 @@ export const executeAutomod = async (
       channelId,
       state,
       "Too many uppercase",
-      "don't use that many uppercase"
+      "don't use that many uppercase",
+      settings.warnBeforeBan
     );
   }
 
@@ -61,7 +65,8 @@ export const executeAutomod = async (
       channelId,
       state,
       "Mass duplicated characters",
-      "don't use that many duplicated characters"
+      "don't use that many duplicated characters",
+      settings.warnBeforeBan
     );
   }
 };
