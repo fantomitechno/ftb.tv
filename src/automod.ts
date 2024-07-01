@@ -39,7 +39,7 @@ export const executeAutomod = async (
   const settings = (await getSettings(channelId)) ?? {
     antiDuplicate: true,
     antiUpperCase: true,
-    warnBeforeBan: 5
+    warnsBeforeBan: 5
   };
   if (
     settings.antiUpperCase &&
@@ -53,7 +53,7 @@ export const executeAutomod = async (
       state,
       "Too many uppercase",
       "don't use that many uppercase",
-      settings.warnBeforeBan
+      settings.warnsBeforeBan
     );
   }
 
@@ -66,7 +66,7 @@ export const executeAutomod = async (
       state,
       "Mass duplicated characters",
       "don't use that many duplicated characters",
-      settings.warnBeforeBan
+      settings.warnsBeforeBan
     );
   }
 };
