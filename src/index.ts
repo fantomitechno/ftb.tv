@@ -14,7 +14,7 @@ const client = new Client({
     username: process.env.CLIENT,
     password: "oauth:" + process.env.CLIENT_TOKEN,
   },
-  channels,
+  channels: Array.from(channels),
 });
 
 client
@@ -22,8 +22,8 @@ client
   .then(async () => {
     console.log(`Connected to ${channels.length} channels!`)
     for (const channel of channels) {
-      const channelId = await getUserId(channel)
-      await init(client, channelId, channel);
+      const channelId = await getUserId(channel);
+      await init(client, channelId, "#" + channel);
     }
   })
   .catch(console.error);
