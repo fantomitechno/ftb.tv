@@ -4,57 +4,50 @@ import { Timer } from "@prisma/client";
 import { getTimer, getTimers } from "./prisma.js";
 import { checkIfStreaming } from "./helix.js";
 
-const intervalsForChannel: { [channel: string]: NodeJS.Timeout[] } = {};
+type Timers = { [timerId: number]: { waitingFor: number, messageSinceLast: number } }
+const intervalsForChannels: { [channel: string]: { timeouts: NodeJS.Timeout[], timers: Timers } } = {};
 
-const waitingForMessages: { [channel: string]: { [timerId: number]: number } } =
-  {};
-const numberOfMessagesSinceLast: {
-  [channel: string]: { [timerId: number]: number };
-} = {};
 
 const init = async (client: Client, channelId: string, channel: string) => {
-  const intervals = intervalsForChannel[channel];
+  const intervals = intervalsForChannels[channel];
   if (intervals) {
-    intervals.forEach((i) => clearInterval(i));
+    intervals.timeouts.forEach((i) => clearInterval(i));
   }
 
-  numberOfMessagesSinceLast[channel] = [];
-  waitingForMessages[channel] = {};
+  intervalsForChannels[channel] = { timeouts: [], timers: {} };
 
   const dbTimers = await getTimers(channelId);
 
-  intervalsForChannel[channel] = dbTimers.map((timer) => {
-    numberOfMessagesSinceLast[channel][timer.id] = 0;
+  intervalsForChannels[channel].timeouts = dbTimers.map((timer) => {
+    intervalsForChannels[channel].timers[timer.id] = {
+      messageSinceLast: 0,
+      waitingFor: -1
+    };
     return createInterval(client, timer, channel, channelId);
   });
-};
 
-type t = Array<keyof (typeof waitingForMessages)["uwu"]>;
+  console.log(intervalsForChannels)
+};
 
 const processMessage = async (
   client: Client,
   channel: string,
   channelId: string
 ) => {
-  if (numberOfMessagesSinceLast[channel]) {
+  const timerForChannel = intervalsForChannels[channel].timers
+  if (timerForChannel) {
     for (const key of Object.keys(
-      numberOfMessagesSinceLast[channel]
+      timerForChannel
     ) as unknown as number[]) {
-      numberOfMessagesSinceLast[channel][key] += 1;
-    }
-  }
-  const waitings = waitingForMessages[channel];
-  if (waitings) {
-    for (const key of Object.keys(waitings) as unknown as number[]) {
-      waitings[key] -= 1;
-      if (waitings[key] <= 0) {
-        delete waitings[key];
+      timerForChannel[key].messageSinceLast += 1;
+      timerForChannel[key].waitingFor -= 1;
+      if (timerForChannel[key].waitingFor == 0) {
         const timer = await getTimer(channelId, Number(key));
         console.log(timer)
         if (timer) {
-          numberOfMessagesSinceLast[channel][key] = 0;
+          timerForChannel[key].messageSinceLast = 0;
           sendMessage(client, channel, channelId, timer.message);
-          intervalsForChannel[channel].push(createInterval(client, timer, channel, channelId));
+          intervalsForChannels[channel].timeouts.push(createInterval(client, timer, channel, channelId));
         }
       }
     }
@@ -63,18 +56,18 @@ const processMessage = async (
 
 const createInterval = (client: Client, timer: Timer, channel: string, channelId: string) => {
   const interval = setInterval(() => {
+    const timerForChannel = intervalsForChannels[channel].timers[timer.id]
     if (
       !timer.nbMessage ||
-      numberOfMessagesSinceLast[channel][timer.id] >= timer.nbMessage
+      timerForChannel.messageSinceLast >= timer.nbMessage
     ) {
       sendMessage(client, channel, channelId, timer.message);
-      numberOfMessagesSinceLast[channel][timer.id] = 0;
+      timerForChannel.messageSinceLast = 0;
     } else {
-      waitingForMessages[channel][timer.id] =
-        timer.nbMessage - numberOfMessagesSinceLast[channel][timer.id];
+      timerForChannel.waitingFor = timer.nbMessage - timerForChannel.messageSinceLast;
       clearInterval(interval);
-      const index = intervalsForChannel[channel].indexOf(interval);
-      if (index > -1) intervalsForChannel[channel].splice(index, 1);
+      const index = intervalsForChannels[channel].timeouts.indexOf(interval);
+      if (index > -1) intervalsForChannels[channel].timeouts.splice(index, 1);
     }
   }, timer.repeatTime * 1000);
   return interval;

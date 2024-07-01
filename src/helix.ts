@@ -56,9 +56,9 @@ const getTitle = async (channelId: string) => {
   return (await req.json()).data[0].title;
 };
 
-const checkIfStreaming = async (channelId: string) => {
+const checkIfStreaming = async (...channelIds: string[]) => {
   const req = await fetch(
-    `https://api.twitch.tv/helix/streams?user_login=${channelId}`,
+    `https://api.twitch.tv/helix/streams?user_id=${channelIds.join("&user_id=")}`,
     {
       method: "GET",
       headers: {
@@ -68,6 +68,7 @@ const checkIfStreaming = async (channelId: string) => {
       }
     }
   )
+
 
   const json: { data: any[] } = await req.json();
 
