@@ -46,7 +46,7 @@ const delCommand = async (channelId: string, commandName: string) => {
   return true;
 };
 
-const listCommand = async (channelId: string, isMod: boolean) => {
+const listCommand = async (channelId: string, toAdd: string[], isMod: boolean) => {
   const dbCommands = await prisma.command.findMany({
     where: {
       channelId,
@@ -60,21 +60,10 @@ const listCommand = async (channelId: string, isMod: boolean) => {
       ],
     },
   });
-  return isMod
-    ? [
-        ...dbCommands.map((c) => c.commandName),
-        "add-com",
-        "del-com",
-        "list-com",
-        "title",
-        "so",
-        "followmode",
-        "emotemode",
-        "submode",
-        "slowmode",
-        "timer-reload",
-      ].sort()
-    : dbCommands.map((c) => c.commandName);
+  return [
+    ...dbCommands.map((c) => c.commandName),
+    ...toAdd
+  ].sort()
 };
 
 const getCommand = async (channelId: string, commandName: string) => {

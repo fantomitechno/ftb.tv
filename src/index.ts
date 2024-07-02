@@ -2,7 +2,7 @@ import { ChatUserstate, Client } from "tmi.js";
 import { config } from "dotenv";
 config();
 
-import { executeCommand } from "./command.js";
+import { executeCommand, loadCommands } from "./command.js";
 import { executeAutomod } from "./automod.js";
 import { init, processMessageForTimers } from "./timer.js";
 import { getUserId } from "./helix/index.js";
@@ -16,6 +16,8 @@ const client = new Client({
   },
   channels: Array.from(channels),
 });
+
+loadCommands()
 
 client
   .connect()
@@ -51,9 +53,9 @@ client.on("message", async (channel, state, message, self) => {
     );
   }
 
-  //if (!isBypass(channel, state)) {
-  executeAutomod(message, state, channel, client, Object.keys(chatUserCache));
-  //}
+  if (!isBypass(channel, state)) {
+    executeAutomod(message, state, channel, client, Object.keys(chatUserCache));
+  }
 
   processMessageForTimers(client, channel, state["room-id"]!);
 
