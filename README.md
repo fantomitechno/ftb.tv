@@ -11,4 +11,4 @@ todo:
 - [x] FIX: client.timeout doesn't exist https://dev.twitch.tv/docs/api/reference/#ban-user
 - [x] FIX: don't moderate if the problematique message is a user in chat (hard to do...)
 - [x] commercials
-- [] link filtering
+- [x] link filtering
