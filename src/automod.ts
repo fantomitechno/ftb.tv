@@ -5,10 +5,10 @@ import {
   addWarn,
   getSettings,
   getGlobalBanWords,
-  getChannelBanWords,
 } from "./prisma/index.js";
 import { countUpperCase } from "./string.js";
 import { deleteMessage, giveBan, giveWarn } from "./helix/chat.js";
+import { BanWords, LinkFilters, Settings } from "@prisma/client";
 
 export const executeAutomod = async (
   message: string,
@@ -19,9 +19,22 @@ export const executeAutomod = async (
 ) => {
   const channelId = state["room-id"]!;
   const settings = (await getSettings(channelId)) ?? {
+    channelId: "",
+    title: "",
     antiDuplicate: true,
     antiUpperCase: true,
     warnsBeforeBan: 5,
+    banwords: {
+      channelId: "",
+      whiteList: [],
+      blackList: []
+    },
+    linkFilters: {
+      channelId: "",
+      trustedLinks: ["clips.twitch.tv"],
+      untrustedLinks: [],
+      deleteAll: true
+    }
   };
 
   executeBanWordsChecks(
@@ -30,7 +43,16 @@ export const executeAutomod = async (
     channel,
     channelId,
     client,
-    settings.warnsBeforeBan
+    settings
+  );
+
+  executeBadLinkChecks(
+    message,
+    state,
+    channel,
+    channelId,
+    client,
+    settings
   );
 
   const upperCaseRatio =
@@ -47,9 +69,9 @@ export const executeAutomod = async (
     );
   }
 
-  const regexp = /(\S+)([\t ]*)(?:\1\2?){12,}/g;
-  if (settings.antiDuplicate && regexp.test(message) && message.length > 7) {
-    const match = message.match(regexp);
+  const duplicateRegexp = /(\S+)([\t ]*)(?:\1\2?){12,}/g;
+  if (settings.antiDuplicate && duplicateRegexp.test(message) && message.length > 7) {
+    const match = message.match(duplicateRegexp);
 
     let userMatched = false;
     for (const user of chatUserCache) {
@@ -78,16 +100,12 @@ const executeBanWordsChecks = async (
   channel: string,
   channelId: string,
   client: Client,
-  maxWarn: number
+  settings: Settings & { banwords: BanWords, linkFilters: LinkFilters }
 ) => {
   const globalBanWords = (await getGlobalBanWords()) || { blackList: [] };
-  const channelBanWords = (await getChannelBanWords(channelId)) || {
-    blackList: [] as string[],
-    whiteList: [] as string[],
-  };
 
   for (const GbanWord of globalBanWords.blackList.filter(
-    (w) => !channelBanWords.whiteList.includes(w)
+    (w) => !settings.banwords.whiteList.includes(w)
   )) {
     if (message.includes(GbanWord)) {
       return await warn(
@@ -96,12 +114,12 @@ const executeBanWordsChecks = async (
         channelId,
         state,
         "Usage of banned word",
-        maxWarn,
+        settings.warnsBeforeBan,
         true
       );
     }
   }
-  for (const banWord of channelBanWords.blackList) {
+  for (const banWord of settings.banwords.blackList) {
     if (message.includes(banWord)) {
       return await warn(
         client,
@@ -109,12 +127,61 @@ const executeBanWordsChecks = async (
         channelId,
         state,
         "Usage of banned word",
-        maxWarn,
+        settings.warnsBeforeBan,
         true
       );
     }
   }
 };
+
+const executeBadLinkChecks = async (
+  message: string,
+  state: ChatUserstate,
+  channel: string,
+  channelId: string,
+  client: Client,
+  settings: Settings & { banwords: BanWords, linkFilters: LinkFilters }) => {
+  const linkRegexp = /(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/igm
+  const domainRegexp = /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/igm
+  const matchs = message.match(linkRegexp);
+  if (matchs?.length) {
+    const domains = matchs.map(match => domainRegexp.exec(match)?.at(1))
+    let trustedDomains = 0;
+    for (const domain of domains) {
+      if (!domain) {
+        trustedDomains += 1
+        continue
+      }
+      if (settings.linkFilters.trustedLinks.includes(domain)) {
+        trustedDomains += 1
+      }
+      if (settings.linkFilters.untrustedLinks.includes(domain)) {
+        await warn(
+          client,
+          channel,
+          channelId,
+          state,
+          "Usage of untrusted link",
+          settings.warnsBeforeBan,
+          true
+        );
+        return;
+      }
+    }
+
+    if (settings.linkFilters.deleteAll && trustedDomains < matchs.length && trustedDomains != -1) {
+      await warn(
+        client,
+        channel,
+        channelId,
+        state,
+        "Usage of untrusted link",
+        settings.warnsBeforeBan,
+        true
+      );
+    }
+  }
+}
 
 const warn = async (
   client: Client,

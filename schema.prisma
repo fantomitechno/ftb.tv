@@ -27,11 +27,13 @@ model Token {
 }
 
 model Settings {
-  channelId      String  @id
-  title          String  @default("{}")
-  antiUpperCase  Boolean @default(true)
-  antiDuplicate  Boolean @default(true)
-  warnsBeforeBan Int     @default(5)
+  channelId      String      @id
+  title          String      @default("{}")
+  antiUpperCase  Boolean     @default(true)
+  antiDuplicate  Boolean     @default(true)
+  warnsBeforeBan Int         @default(5)
+  banwords       BanWords    @relation(fields: [channelId], references: [channelId], map: "banwords_channel")
+  linkFilters    LinkFilters @relation(fields: [channelId], references: [channelId], map: "linkfilters_channel")
 }
 
 model Warning {
@@ -58,7 +60,16 @@ model Timer {
 }
 
 model BanWords {
-  channelId String   @id
-  blackList String[] @default([])
-  whiteList String[] @default([])
+  channelId String     @id
+  blackList String[]   @default([])
+  whiteList String[]   @default([])
+  Settings  Settings[]
+}
+
+model LinkFilters {
+  channelId      String     @id
+  deleteAll      Boolean    @default(true)
+  trustedLinks   String[]   @default(["clips.twitch.tv"])
+  untrustedLinks String[]   @default([])
+  Settings       Settings[]
 }

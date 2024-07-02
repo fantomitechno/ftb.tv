@@ -28,6 +28,5 @@ export const execute = async (
     client.raw(
       `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured while launching an ad break`
     );
-
   }
 }
