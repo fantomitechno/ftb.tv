@@ -53,9 +53,9 @@ client.on("message", async (channel, state, message, self) => {
     );
   }
 
-  //if (!isBypass(channel, state)) {
-  executeAutomod(message, state, channel, client, Object.keys(chatUserCache));
-  //}
+  if (!isBypass(channel, state)) {
+    executeAutomod(message, state, channel, client, Object.keys(chatUserCache));
+  }
 
   processMessageForTimers(client, channel, state["room-id"]!);
 
