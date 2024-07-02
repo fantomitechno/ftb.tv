@@ -50,8 +50,6 @@ const executeCommand = async (
   isMod: boolean
 ) => {
   const channelId = state["room-id"]!;
-
-
   const alias = commandAliases.get(commandRaw);
   if (alias) {
     const command = commands.get(alias)!
@@ -64,14 +62,30 @@ const executeCommand = async (
   if (!command) return;
   if (cooldown && cooldown + command.cooldown * 1000 > Date.now()) return;
   if (command.isMod && !isMod) return;
+  let message;
   if (command.message) {
-    if (command.reply)
-      client.raw(
-        `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${command.message}`
-      );
-    else client.say(channel, command.message);
+    message = formatMessage(command.message, channel, state, args)
+  } else if (command.fetch) {
+    const res = await fetch(formatMessage(command.fetch, channel, state, args, true));
+    message = formatMessage(await res.text(), channel, state, args)
   }
 
+  if (!message) return;
+
+  if (command.reply)
+    client.raw(
+      `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :${message}`
+    );
+  else client.say(channel, message);
 };
+
+const formatMessage = (message: string, channel: string, state: ChatUserstate, args: string[], urlEncode: boolean = false) => {
+  message = message
+    .replaceAll(`{user}`, urlEncode ? encodeURI(state["display-name"]!) : state["display-name"]!)
+    .replaceAll(`{channel}`, urlEncode ? encodeURI(channel.replace("#", '')) : channel.replace("#", ''))
+    .replaceAll(`{args}`, urlEncode ? encodeURI(args.join(" ")) : args.join(" "))
+
+  return message
+}
 
 export { loadCommands, executeCommand }

@@ -40,11 +40,12 @@ const chatUserCache: { [username: string]: NodeJS.Timeout } = {}
 client.on("message", async (channel, state, message, self) => {
   if (self) return;
 
-  if (message.startsWith(process.env.PREFIX ?? "!")) {
-    const [command, ...args] = message.slice(1).split(" ");
+  const words = message.split(" ")
+  if (words[0].startsWith(process.env.PREFIX ?? "!") || (words[0].startsWith("@") && words[1].startsWith(process.env.PREFIX ?? "!"))) {
+    const [command, ...args] = words[0].startsWith("@") ? words : words.slice(1);
 
     executeCommand(
-      command,
+      command.slice(1),
       args,
       channel,
       state,

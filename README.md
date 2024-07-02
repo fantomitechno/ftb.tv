@@ -1,5 +1,5 @@
 # ftb.tv
- 
+
 todo:
 
 - [x] cooldown on command
@@ -12,3 +12,4 @@ todo:
 - [x] FIX: don't moderate if the problematique message is a user in chat (hard to do...)
 - [x] commercials
 - [x] link filtering
+- [x] custom vars

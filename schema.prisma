@@ -11,6 +11,7 @@ model Command {
   channelId   String
   commandName String
   message     String?
+  fetch       String?
   reply       Boolean @default(true)
   isMod       Boolean @default(false)
   cooldown    Int     @default(10)
