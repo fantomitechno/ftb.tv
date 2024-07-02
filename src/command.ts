@@ -1,20 +1,9 @@
 import { ChatUserstate, Client } from "tmi.js";
 
 import {
-  getChatSettings,
-  getTitle,
-  giveShoutout,
-  modifyChatSettings,
-  modifyTitle,
-  sendAnnouncement,
-} from "./helix/index.js";
-import {
-  addCommand,
-  delCommand,
   listCommand,
   getCommand,
 } from "./prisma/commands.js";
-import { init } from "./timer.js";
 import { readdirSync } from "fs";
 
 const cooldownManager: { [command: string]: number } = {};
@@ -36,7 +25,7 @@ const loadCommands = async () => {
   loadCommand({
     names: ["help", "commands"],
     execute: async (client: Client, channel: string, channelId: string, state: ChatUserstate, args: string[], isMod: boolean) => {
-      const commandList = await listCommand(channelId, isMod ? Object.keys(commands) : [], isMod);
+      const commandList = await listCommand(channelId, isMod ? Array.from(commands.keys()) : [], isMod);
       client.raw(
         `@reply-parent-msg-id=${state.id
         } PRIVMSG ${channel} :Available commands are: ${commandList.join(", ")}`
