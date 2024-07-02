@@ -27,10 +27,10 @@ model Token {
 }
 
 model Settings {
-  channelId     String  @id
-  title         String  @default("{}")
-  antiUpperCase Boolean @default(true)
-  antiDuplicate Boolean @default(true) 
+  channelId      String  @id
+  title          String  @default("{}")
+  antiUpperCase  Boolean @default(true)
+  antiDuplicate  Boolean @default(true)
   warnsBeforeBan Int     @default(5)
 }
 
@@ -55,4 +55,10 @@ model Timer {
   repeatTime Int
   message    String
   nbMessage  Int?
+}
+
+model BanWords {
+  channelId String   @id
+  blackList String[] @default([])
+  whiteList String[] @default([])
 }

@@ -49,9 +49,9 @@ client.on("message", async (channel, state, message, self) => {
     );
   }
 
-  if (!isBypass(channel, state)) {
-    executeAutomod(message, state, channel, client);
-  }
+  //if (!isBypass(channel, state)) {
+  executeAutomod(message, state, channel, client);
+  //}
 
   processMessageForTimers(client, channel, state["room-id"]!);
 });

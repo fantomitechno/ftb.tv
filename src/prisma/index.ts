@@ -31,6 +31,7 @@ const getToken = async (channelId: string) => {
 
 export { prisma, getToken }
 
+export * from "./banwords.js"
 export * from "./commands.js"
 export * from "./settings.js"
 export * from "./timers.js"

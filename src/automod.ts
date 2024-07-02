@@ -1,6 +1,6 @@
 import { ChatUserstate, Client } from "tmi.js";
 
-import { getWarns, addWarn, getSettings } from "./prisma/index.js";
+import { getWarns, addWarn, getSettings, getGlobalBanWords, getChannelBanWords } from "./prisma/index.js";
 import { countUpperCase } from "./string.js";
 import { deleteMessage, giveBan, giveWarn } from "./helix/chat.js";
 
@@ -57,6 +57,7 @@ export const executeAutomod = async (
 
   const regexp = /(\S+)([\t ]*)(?:\1\2?){12,}/g;
   if (settings.antiDuplicate && regexp.test(message) && message.length > 7) {
+    console.log(regexp.exec(message))
     await warn(
       client,
       channel,
@@ -66,4 +67,32 @@ export const executeAutomod = async (
       settings.warnsBeforeBan
     );
   }
+
+  executeBanWordsChecks(message, state, channel, channelId, client, settings.warnsBeforeBan);
 };
+
+const executeBanWordsChecks = async (
+  message: string,
+  state: ChatUserstate,
+  channel: string,
+  channelId: string,
+  client: Client,
+  maxWarn: number,) => {
+  const globalBanWords = await getGlobalBanWords() || { blackList: [] };
+  const channelBanWords = await getChannelBanWords(channelId) || { blackList: [] as string[], whiteList: [] as string[] };
+
+  for (const GbanWord of globalBanWords.blackList.filter(w => !channelBanWords.whiteList.includes(w))) {
+    if (message.includes(GbanWord)) {
+      return await warn(
+        client, channel, channelId, state, "Usage of banned word", maxWarn, true
+      );
+    }
+  }
+  for (const banWord of channelBanWords.blackList) {
+    if (message.includes(banWord)) {
+      return await warn(
+        client, channel, channelId, state, "Usage of banned word", maxWarn, true
+      );
+    }
+  }
+}

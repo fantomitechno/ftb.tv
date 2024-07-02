@@ -41,7 +41,6 @@ const processMessageForTimers = async (
       timerForChannel[key].waitingFor -= 1;
       if (timerForChannel[key].waitingFor == 0) {
         const timer = await getTimer(channelId, Number(key));
-        console.log(timer)
         if (timer) {
           timerForChannel[key].messageSinceLast = 0;
           sendMessage(client, channel, channelId, timer.message);
