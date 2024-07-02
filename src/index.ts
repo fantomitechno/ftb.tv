@@ -20,7 +20,7 @@ const client = new Client({
 client
   .connect()
   .then(async () => {
-    console.log(`Connected to ${channels.length} channels!`)
+    console.log(`Connected to ${channels.length} channels!`);
     for (const channel of channels) {
       const channelId = await getUserId(channel);
       await init(client, channelId, "#" + channel);

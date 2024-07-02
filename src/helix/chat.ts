@@ -50,7 +50,8 @@ const giveShoutout = async (channelId: string, shoutout: string) => {
 
 const deleteMessage = async (channelId: string, messageId: string) => {
   const modId = await getUserId();
-  const res = await fetch(`
+  const res = await fetch(
+    `
     https://api.twitch.tv/helix/moderation/chat?broadcaster_id=${channelId}&moderator_id=${modId}&message_id=${messageId}`,
     {
       method: "DELETE",
@@ -60,54 +61,65 @@ const deleteMessage = async (channelId: string, messageId: string) => {
         "Content-Type": "application/json",
       },
     }
-  )
+  );
 
   if (res.status != 200) {
-    console.error(`User doesn't have mod power at ${channelId}`)
+    console.error(`User doesn't have mod power at ${channelId}`);
   }
-}
+};
 
 const giveWarn = async (channelId: string, userId: string, reason: string) => {
   const modId = await getUserId();
 
-  const res = await fetch(`https://api.twitch.tv/helix/moderation/warnings?broadcaster_id=${channelId}&moderator_id=${modId}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
-      "Client-Id": process.env.TWITCH_ID!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      data: {
-        user_id: userId,
-        reason
-      }
-    })
-  })
+  const res = await fetch(
+    `https://api.twitch.tv/helix/moderation/warnings?broadcaster_id=${channelId}&moderator_id=${modId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          user_id: userId,
+          reason,
+        },
+      }),
+    }
+  );
 
   return res.status == 200;
-}
+};
 
-const giveBan = async (channelId: string, userId: string, reason: string, duration: number) => {
+const giveBan = async (
+  channelId: string,
+  userId: string,
+  reason: string,
+  duration: number
+) => {
   const modId = await getUserId();
 
-  const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${channelId}&moderator_id=${modId}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
-      "Client-Id": process.env.TWITCH_ID!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      data: {
-        user_id: userId,
-        reason,
-        duration
-      }
-    })
-  })
+  const res = await fetch(
+    `https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${channelId}&moderator_id=${modId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+        "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data: {
+          user_id: userId,
+          reason,
+          duration,
+        },
+      }),
+    }
+  );
 
   return res.status == 200;
-}
+};
 
-export { sendAnnouncement, giveShoutout, deleteMessage, giveWarn, giveBan }
+export { sendAnnouncement, giveShoutout, deleteMessage, giveWarn, giveBan };

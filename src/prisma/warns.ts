@@ -40,4 +40,4 @@ const addWarn = async (
   });
 };
 
-export { getWarns, addWarn }
+export { getWarns, addWarn };

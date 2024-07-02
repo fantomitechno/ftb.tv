@@ -15,4 +15,4 @@ const getUserId = async (login?: string) => {
   return data?.id;
 };
 
-export { getUserId }
+export { getUserId };

@@ -29,10 +29,10 @@ const getToken = async (channelId: string) => {
   return token;
 };
 
-export { prisma, getToken }
+export { prisma, getToken };
 
-export * from "./banwords.js"
-export * from "./commands.js"
-export * from "./settings.js"
-export * from "./timers.js"
-export * from "./warns.js"
+export * from "./banwords.js";
+export * from "./commands.js";
+export * from "./settings.js";
+export * from "./timers.js";
+export * from "./warns.js";

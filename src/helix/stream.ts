@@ -59,22 +59,23 @@ const getTitle = async (channelId: string) => {
 
 const checkIfStreaming = async (...channelIds: string[]) => {
   const req = await fetch(
-    `https://api.twitch.tv/helix/streams?user_id=${channelIds.join("&user_id=")}`,
+    `https://api.twitch.tv/helix/streams?user_id=${channelIds.join(
+      "&user_id="
+    )}`,
     {
       method: "GET",
       headers: {
         Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
         "Client-Id": process.env.TWITCH_ID!,
-        "Content-Type": "application/json"
-      }
+        "Content-Type": "application/json",
+      },
     }
-  )
-
+  );
 
   const json: { data: any[] } = await req.json();
 
-  return Boolean(json.data.length)
-}
+  return Boolean(json.data.length);
+};
 
 const modifyChatSettings = async (channelId: string, options: ChatSettings) => {
   const userId = await getUserId();
@@ -115,5 +116,9 @@ const getChatSettings = async (channelId: string) => {
 };
 
 export {
-  checkIfStreaming, getChatSettings, modifyChatSettings, getTitle, modifyTitle
-}
+  checkIfStreaming,
+  getChatSettings,
+  modifyChatSettings,
+  getTitle,
+  modifyTitle,
+};

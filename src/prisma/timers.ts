@@ -8,4 +8,4 @@ const getTimer = async (channelId: string, timerId: number) => {
   return prisma.timer.findFirst({ where: { channelId, id: timerId } });
 };
 
-export { getTimer, getTimers }
+export { getTimer, getTimers };

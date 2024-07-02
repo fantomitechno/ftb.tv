@@ -8,7 +8,12 @@ import {
   modifyTitle,
   sendAnnouncement,
 } from "./helix/index.js";
-import { addCommand, delCommand, listCommand, getCommand } from "./prisma/commands.js";
+import {
+  addCommand,
+  delCommand,
+  listCommand,
+  getCommand,
+} from "./prisma/commands.js";
 import { init } from "./timer.js";
 
 const cooldownManager: { [command: string]: number } = {};
@@ -54,7 +59,8 @@ export const executeCommand = async (
     case "title": {
       if (!args.length) {
         client.raw(
-          `@reply-parent-msg-id=${state.id
+          `@reply-parent-msg-id=${
+            state.id
           } PRIVMSG ${channel} :Title is "${await getTitle(channelId)}"`
         );
       } else {
@@ -188,7 +194,7 @@ export const executeCommand = async (
     }
     case "timerr":
     case "timer-reload": {
-      await init(client, channelId, channel)
+      await init(client, channelId, channel);
       client.raw(
         `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Reloaded timers`
       );
@@ -199,7 +205,8 @@ export const executeCommand = async (
     case "commands": {
       const commands = await listCommand(channelId, isMod);
       client.raw(
-        `@reply-parent-msg-id=${state.id
+        `@reply-parent-msg-id=${
+          state.id
         } PRIVMSG ${channel} :Available commands are: ${commands.join(", ")}`
       );
       break;
