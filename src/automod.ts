@@ -55,7 +55,7 @@ export const executeAutomod = async (
     );
   }
 
-  const regexp = /(\S+)([\t ]*)(?:\1\2?){7,}/g;
+  const regexp = /(\S+)([\t ]*)(?:\1\2?){12,}/g;
   if (settings.antiDuplicate && regexp.test(message) && message.length > 7) {
     await warn(
       client,
