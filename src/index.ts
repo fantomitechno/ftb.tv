@@ -4,7 +4,7 @@ config();
 
 import { executeCommand } from "./command.js";
 import { executeAutomod } from "./automod.js";
-import { init, processMessage } from "./timer.js";
+import { init, processMessageForTimers } from "./timer.js";
 import { getUserId } from "./helix/index.js";
 
 const channels = process.env.CHANNELS!.split(",");
@@ -53,5 +53,5 @@ client.on("message", async (channel, state, message, self) => {
     executeAutomod(message, state, channel, client);
   }
 
-  processMessage(client, channel, state["room-id"]!);
+  processMessageForTimers(client, channel, state["room-id"]!);
 });

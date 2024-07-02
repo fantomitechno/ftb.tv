@@ -27,7 +27,7 @@ const init = async (client: Client, channelId: string, channel: string) => {
   });
 };
 
-const processMessage = async (
+const processMessageForTimers = async (
   client: Client,
   channel: string,
   channelId: string
@@ -79,5 +79,5 @@ const sendMessage = async (client: Client, channel: string, channelId: string, m
 
 export {
   init,
-  processMessage
+  processMessageForTimers
 }
