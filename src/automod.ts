@@ -2,7 +2,7 @@ import { ChatUserstate, Client } from "tmi.js";
 
 import { getWarns, addWarn, getSettings } from "./prisma.js";
 import { countUpperCase } from "./string.js";
-import { deleteMessage } from "./helix/chat.js";
+import { deleteMessage, giveBan, giveWarn } from "./helix/chat.js";
 
 const warn = async (
   client: Client,
@@ -10,22 +10,19 @@ const warn = async (
   channelId: string,
   state: ChatUserstate,
   reason: string,
-  publicText: string,
   maxWarn: number,
   deleteMsg: boolean = true
 ) => {
   const warns = await getWarns(channelId, state["user-id"]!);
   if (warns.length > maxWarn) {
-    client.timeout(
-      channel,
-      state.username!,
-      60 * warns.length,
-      `${reason}! | Warn #${warns.length + 1}`
-    );
+    const success = await giveBan(channelId, state["user-id"]!, `${reason}! | Warn #${warns.length + 1}`, 60 * warns.length)
+    if (!success) client.say(channel, "An error occured while performing a timeout")
+
   } else {
-    await client.say(channel, `${state["display-name"]}, ${publicText}`);
+    const success = await giveWarn(channelId, state["user-id"]!, `${reason}! | Warn #${warns.length + 1}`)
+    if (!success) client.say(channel, "An error occured while performing a warning")
   }
-  if (deleteMsg) await deleteMessage(channel, state.id!);
+  if (deleteMsg) await deleteMessage(channelId, state.id!);
   await addWarn(channelId, state.username!, state["user-id"]!, reason);
 };
 
@@ -41,10 +38,11 @@ export const executeAutomod = async (
     antiUpperCase: true,
     warnsBeforeBan: 5
   };
+  const upperCaseRatio = countUpperCase(message) / (message.match(/[A-z]/g) ?? []).length;
   if (
     settings.antiUpperCase &&
     message.length > 10 &&
-    countUpperCase(message) / (message.match(/[A-z]/g) ?? []).length > 0.8
+    upperCaseRatio > 0.8
   ) {
     await warn(
       client,
@@ -52,8 +50,8 @@ export const executeAutomod = async (
       channelId,
       state,
       "Too many uppercase",
-      "don't use that many uppercase",
-      settings.warnsBeforeBan
+      settings.warnsBeforeBan,
+      upperCaseRatio > 0.9
     );
   }
 
@@ -65,7 +63,6 @@ export const executeAutomod = async (
       channelId,
       state,
       "Mass duplicated characters",
-      "don't use that many duplicated characters",
       settings.warnsBeforeBan
     );
   }

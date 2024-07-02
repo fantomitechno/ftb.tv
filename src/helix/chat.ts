@@ -31,6 +31,7 @@ const giveShoutout = async (channelId: string, shoutout: string) => {
       headers: {
         Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
         "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
       },
     }
   );
@@ -56,6 +57,7 @@ const deleteMessage = async (channelId: string, messageId: string) => {
       headers: {
         Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
         "Client-Id": process.env.TWITCH_ID!,
+        "Content-Type": "application/json",
       },
     }
   )
@@ -65,4 +67,47 @@ const deleteMessage = async (channelId: string, messageId: string) => {
   }
 }
 
-export { sendAnnouncement, giveShoutout, deleteMessage }
+const giveWarn = async (channelId: string, userId: string, reason: string) => {
+  const modId = await getUserId();
+
+  const res = await fetch(`https://api.twitch.tv/helix/moderation/warnings?broadcaster_id=${channelId}&moderator_id=${modId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+      "Client-Id": process.env.TWITCH_ID!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      data: {
+        user_id: userId,
+        reason
+      }
+    })
+  })
+
+  return res.status == 200;
+}
+
+const giveBan = async (channelId: string, userId: string, reason: string, duration: number) => {
+  const modId = await getUserId();
+
+  const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${channelId}&moderator_id=${modId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.CLIENT_TOKEN}`,
+      "Client-Id": process.env.TWITCH_ID!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      data: {
+        user_id: userId,
+        reason,
+        duration
+      }
+    })
+  })
+
+  return res.status == 200;
+}
+
+export { sendAnnouncement, giveShoutout, deleteMessage, giveWarn, giveBan }
