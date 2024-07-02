@@ -33,6 +33,8 @@ const isMod = (channel: string, state: ChatUserstate) =>
 const isBypass = (channel: string, state: ChatUserstate) =>
   isMod(channel, state) || Boolean(state.badges?.vip);
 
+const chatUserCache: { [username: string]: NodeJS.Timeout } = {}
+
 client.on("message", async (channel, state, message, self) => {
   if (self) return;
 
@@ -50,8 +52,13 @@ client.on("message", async (channel, state, message, self) => {
   }
 
   //if (!isBypass(channel, state)) {
-  executeAutomod(message, state, channel, client);
+  executeAutomod(message, state, channel, client, Object.keys(chatUserCache));
   //}
 
   processMessageForTimers(client, channel, state["room-id"]!);
+
+  if (chatUserCache[state["display-name"]!]) clearTimeout(chatUserCache[state["display-name"]!])
+  chatUserCache[state["display-name"]!] = setTimeout(() => {
+    delete chatUserCache[state["display-name"]!]
+  }, 1000 * 60 * 60);
 });
