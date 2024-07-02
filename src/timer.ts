@@ -2,7 +2,7 @@ import { Client } from "tmi.js";
 import { Timer } from "@prisma/client";
 
 import { getTimer, getTimers } from "./prisma.js";
-import { checkIfStreaming } from "./helix.js";
+import { checkIfStreaming } from "./helix/stream.js";
 
 type Timers = { [timerId: number]: { waitingFor: number, messageSinceLast: number } }
 const intervalsForChannels: { [channel: string]: { timeouts: NodeJS.Timeout[], timers: Timers } } = {};

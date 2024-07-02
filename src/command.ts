@@ -7,7 +7,7 @@ import {
   modifyChatSettings,
   modifyTitle,
   sendAnnouncement,
-} from "./helix.js";
+} from "./helix/index.js";
 import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
 import { init } from "./timer.js";
 

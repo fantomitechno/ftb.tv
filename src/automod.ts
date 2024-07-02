@@ -2,7 +2,7 @@ import { ChatUserstate, Client } from "tmi.js";
 
 import { getWarns, addWarn, getSettings } from "./prisma.js";
 import { countUpperCase } from "./string.js";
-import { deleteMessage } from "./helix.js";
+import { deleteMessage } from "./helix/chat.js";
 
 const warn = async (
   client: Client,
