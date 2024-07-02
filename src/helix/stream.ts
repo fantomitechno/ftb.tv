@@ -1,4 +1,4 @@
-import { getSettings, getToken } from "./../prisma.js";
+import { getSettings, getToken } from "./../prisma/index.js";
 import { getUserId } from "./user.js";
 
 interface ChatSettings {

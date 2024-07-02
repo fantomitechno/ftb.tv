@@ -1,6 +1,6 @@
 import { ChatUserstate, Client } from "tmi.js";
 
-import { getWarns, addWarn, getSettings } from "./prisma.js";
+import { getWarns, addWarn, getSettings } from "./prisma/index.js";
 import { countUpperCase } from "./string.js";
 import { deleteMessage, giveBan, giveWarn } from "./helix/chat.js";
 

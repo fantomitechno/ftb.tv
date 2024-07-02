@@ -10,3 +10,4 @@ todo:
 - [x] use warns: https://dev.twitch.tv/docs/api/reference/#warn-chat-user
 - [] ban words: global and user (user can set whitelist on the global)
 - [x] FIX: client.timeout doesn't exist https://dev.twitch.tv/docs/api/reference/#ban-user
+- [] link filtering

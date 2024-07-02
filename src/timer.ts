@@ -1,7 +1,7 @@
 import { Client } from "tmi.js";
 import { Timer } from "@prisma/client";
 
-import { getTimer, getTimers } from "./prisma.js";
+import { getTimer, getTimers } from "./prisma/timers.js";
 import { checkIfStreaming } from "./helix/stream.js";
 
 type Timers = { [timerId: number]: { waitingFor: number, messageSinceLast: number } }

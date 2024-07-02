@@ -8,7 +8,7 @@ import {
   modifyTitle,
   sendAnnouncement,
 } from "./helix/index.js";
-import { addCommand, delCommand, listCommand, getCommand } from "./prisma.js";
+import { addCommand, delCommand, listCommand, getCommand } from "./prisma/commands.js";
 import { init } from "./timer.js";
 
 const cooldownManager: { [command: string]: number } = {};
