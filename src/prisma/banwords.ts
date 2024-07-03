@@ -1,7 +1,7 @@
 import { prisma } from "./index.js";
 
 const getGlobalBanWords = () => {
-  return prisma.banWords.findFirst({ where: { channelId: "global" } });
+  return prisma.banWords.findUnique({ where: { channelId: "global" } });
 };
 
 export { getGlobalBanWords };

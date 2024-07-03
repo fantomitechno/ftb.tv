@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const getToken = async (channelId: string) => {
-  let token = await prisma.token.findFirst();
+  let token = await prisma.token.findUnique({ where: { channelId } });
   if (!token) throw new Error("No token");
   if (token.createdAt.getDate() + token.expiresIn * 1000 < Date.now()) {
     const req = await fetch("https://id.twitch.tv/oauth2/token", {
