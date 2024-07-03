@@ -24,17 +24,17 @@ export const executeAutomod = async (
     antiDuplicate: true,
     antiUpperCase: true,
     warnsBeforeBan: 5,
-    banwords: {
+    banwords: [{
       channelId: "",
       whiteList: [],
       blackList: []
-    },
-    linkFilters: {
+    }],
+    linkFilters: [{
       channelId: "",
       trustedLinks: ["clips.twitch.tv"],
       untrustedLinks: [],
       deleteAll: true
-    }
+    }]
   };
 
   executeBanWordsChecks(
@@ -100,12 +100,12 @@ const executeBanWordsChecks = async (
   channel: string,
   channelId: string,
   client: Client,
-  settings: Settings & { banwords: BanWords, linkFilters: LinkFilters }
+  settings: Settings & { banwords: BanWords[], linkFilters: LinkFilters[] }
 ) => {
   const globalBanWords = (await getGlobalBanWords()) || { blackList: [] };
 
   for (const GbanWord of globalBanWords.blackList.filter(
-    (w) => !settings.banwords.whiteList.includes(w)
+    (w) => !settings.banwords[0].whiteList.includes(w)
   )) {
     if (message.includes(GbanWord)) {
       return await warn(
@@ -119,7 +119,7 @@ const executeBanWordsChecks = async (
       );
     }
   }
-  for (const banWord of settings.banwords.blackList) {
+  for (const banWord of settings.banwords[0].blackList) {
     if (message.includes(banWord)) {
       return await warn(
         client,
@@ -140,7 +140,7 @@ const executeBadLinkChecks = async (
   channel: string,
   channelId: string,
   client: Client,
-  settings: Settings & { banwords: BanWords, linkFilters: LinkFilters }) => {
+  settings: Settings & { banwords: BanWords[], linkFilters: LinkFilters[] }) => {
   const linkRegexp = /(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/igm
   const domainRegexp = /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/igm
   const matchs = message.match(linkRegexp);
@@ -152,10 +152,10 @@ const executeBadLinkChecks = async (
         trustedDomains += 1
         continue
       }
-      if (settings.linkFilters.trustedLinks.includes(domain)) {
+      if (settings.linkFilters[0].trustedLinks.includes(domain)) {
         trustedDomains += 1
       }
-      if (settings.linkFilters.untrustedLinks.includes(domain)) {
+      if (settings.linkFilters[0].untrustedLinks.includes(domain)) {
         await warn(
           client,
           channel,
@@ -169,7 +169,7 @@ const executeBadLinkChecks = async (
       }
     }
 
-    if (settings.linkFilters.deleteAll && trustedDomains < matchs.length && trustedDomains != -1) {
+    if (settings.linkFilters[0].deleteAll && trustedDomains < matchs.length && trustedDomains != -1) {
       await warn(
         client,
         channel,
