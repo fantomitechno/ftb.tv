@@ -41,7 +41,8 @@ client.on("message", async (channel, state, message, self) => {
   if (self) return;
 
   if (message.startsWith(process.env.PREFIX ?? "!")) {
-    const [command, ...args] = message.split(" ");
+    const [command, ...args] = message.slice((process.env.PREFIX ?? "!").length).split(" ");
+    console.log(command)
 
     executeCommand(
       command,
