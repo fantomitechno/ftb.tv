@@ -10,7 +10,53 @@ import { countUpperCase } from "./string.js";
 import { deleteMessage, giveBan, giveWarn } from "./helix/chat.js";
 import { BanWords, LinkFilters, Settings } from "@prisma/client";
 
-export const executeAutomod = async (
+const settingsCache: {
+  [channel: string]: {
+    settings: Settings & { banwords: BanWords[]; linkFilters: LinkFilters[] };
+    validity: number;
+  };
+} = {};
+
+const reloadSettings = async (channelId: string) => {
+  const settings = (await getSettings(channelId)) ?? {
+    channelId: "",
+    title: "",
+    antiDuplicate: true,
+    antiUpperCase: true,
+    warnsBeforeBan: 5,
+    banwords: [
+      {
+        channelId: "",
+        whiteList: [],
+        blackList: [],
+      },
+    ],
+    linkFilters: [
+      {
+        channelId: "",
+        trustedLinks: ["clips.twitch.tv"],
+        untrustedLinks: [],
+        deleteAll: true,
+      },
+    ],
+  };
+  settingsCache[channelId] = {
+    settings,
+    validity: Date.now() + 30 * 60 * 1000,
+  };
+};
+
+const getCachedSettings = async (channelId: string) => {
+  if (
+    !settingsCache[channelId] ||
+    settingsCache[channelId].validity < Date.now()
+  ) {
+    await reloadSettings(channelId);
+  }
+  return settingsCache[channelId].settings;
+};
+
+const executeAutomod = async (
   message: string,
   state: ChatUserstate,
   channel: string,
@@ -18,42 +64,11 @@ export const executeAutomod = async (
   chatUserCache: string[]
 ) => {
   const channelId = state["room-id"]!;
-  const settings = (await getSettings(channelId)) ?? {
-    channelId: "",
-    title: "",
-    antiDuplicate: true,
-    antiUpperCase: true,
-    warnsBeforeBan: 5,
-    banwords: [{
-      channelId: "",
-      whiteList: [],
-      blackList: []
-    }],
-    linkFilters: [{
-      channelId: "",
-      trustedLinks: ["clips.twitch.tv"],
-      untrustedLinks: [],
-      deleteAll: true
-    }]
-  };
+  const settings = await getCachedSettings(channelId);
 
-  executeBanWordsChecks(
-    message,
-    state,
-    channel,
-    channelId,
-    client,
-    settings
-  );
+  executeBanWordsChecks(message, state, channel, channelId, client, settings);
 
-  executeBadLinkChecks(
-    message,
-    state,
-    channel,
-    channelId,
-    client,
-    settings
-  );
+  executeBadLinkChecks(message, state, channel, channelId, client, settings);
 
   const upperCaseRatio =
     countUpperCase(message) / (message.match(/[A-z]/g) ?? []).length;
@@ -70,7 +85,11 @@ export const executeAutomod = async (
   }
 
   const duplicateRegexp = /(\S+)([\t ]*)(?:\1\2?){12,}/g;
-  if (settings.antiDuplicate && duplicateRegexp.test(message) && message.length > 7) {
+  if (
+    settings.antiDuplicate &&
+    duplicateRegexp.test(message) &&
+    message.length > 7
+  ) {
     const match = message.match(duplicateRegexp);
 
     let userMatched = false;
@@ -100,7 +119,7 @@ const executeBanWordsChecks = async (
   channel: string,
   channelId: string,
   client: Client,
-  settings: Settings & { banwords: BanWords[], linkFilters: LinkFilters[] }
+  settings: Settings & { banwords: BanWords[]; linkFilters: LinkFilters[] }
 ) => {
   const globalBanWords = (await getGlobalBanWords()) || { blackList: [] };
 
@@ -140,20 +159,23 @@ const executeBadLinkChecks = async (
   channel: string,
   channelId: string,
   client: Client,
-  settings: Settings & { banwords: BanWords[], linkFilters: LinkFilters[] }) => {
-  const linkRegexp = /(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/igm
-  const domainRegexp = /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/igm
+  settings: Settings & { banwords: BanWords[]; linkFilters: LinkFilters[] }
+) => {
+  const linkRegexp =
+    /(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/gim;
+  const domainRegexp =
+    /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/gim;
   const matchs = message.match(linkRegexp);
   if (matchs?.length) {
-    const domains = matchs.map(match => domainRegexp.exec(match)?.at(1))
+    const domains = matchs.map((match) => domainRegexp.exec(match)?.at(1));
     let trustedDomains = 0;
     for (const domain of domains) {
       if (!domain) {
-        trustedDomains += 1
-        continue
+        trustedDomains += 1;
+        continue;
       }
       if (settings.linkFilters[0].trustedLinks.includes(domain)) {
-        trustedDomains += 1
+        trustedDomains += 1;
       }
       if (settings.linkFilters[0].untrustedLinks.includes(domain)) {
         await warn(
@@ -169,7 +191,11 @@ const executeBadLinkChecks = async (
       }
     }
 
-    if (settings.linkFilters[0].deleteAll && trustedDomains < matchs.length && trustedDomains != -1) {
+    if (
+      settings.linkFilters[0].deleteAll &&
+      trustedDomains < matchs.length &&
+      trustedDomains != -1
+    ) {
       await warn(
         client,
         channel,
@@ -181,7 +207,7 @@ const executeBadLinkChecks = async (
       );
     }
   }
-}
+};
 
 const warn = async (
   client: Client,
@@ -214,3 +240,5 @@ const warn = async (
   if (deleteMsg) await deleteMessage(channelId, state.id!);
   await addWarn(channelId, state.username!, state["user-id"]!, reason);
 };
+
+export { executeAutomod, reloadSettings };
