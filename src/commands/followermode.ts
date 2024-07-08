@@ -34,4 +34,4 @@ export const execute = async (
       `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Followmode is now at ${time}m`
     );
   }
-}
+};

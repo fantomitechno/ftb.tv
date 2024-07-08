@@ -17,7 +17,7 @@ const client = new Client({
   channels: Array.from(channels),
 });
 
-loadCommands()
+loadCommands();
 
 client
   .connect()
@@ -35,14 +35,16 @@ const isMod = (channel: string, state: ChatUserstate) =>
 const isBypass = (channel: string, state: ChatUserstate) =>
   isMod(channel, state) || Boolean(state.badges?.vip);
 
-const chatUserCache: { [username: string]: NodeJS.Timeout } = {}
+const chatUserCache: { [username: string]: NodeJS.Timeout } = {};
 
 client.on("message", async (channel, state, message, self) => {
   if (self) return;
 
   if (message.startsWith(process.env.PREFIX ?? "!")) {
-    const [command, ...args] = message.slice((process.env.PREFIX ?? "!").length).split(" ");
-    console.log(command)
+    const [command, ...args] = message
+      .slice((process.env.PREFIX ?? "!").length)
+      .split(" ");
+    console.log(command);
 
     executeCommand(
       command,
@@ -60,8 +62,9 @@ client.on("message", async (channel, state, message, self) => {
 
   processMessageForTimers(client, channel, state["room-id"]!);
 
-  if (chatUserCache[state["display-name"]!]) clearTimeout(chatUserCache[state["display-name"]!])
+  if (chatUserCache[state["display-name"]!])
+    clearTimeout(chatUserCache[state["display-name"]!]);
   chatUserCache[state["display-name"]!] = setTimeout(() => {
-    delete chatUserCache[state["display-name"]!]
+    delete chatUserCache[state["display-name"]!];
   }, 1000 * 60 * 60);
 });

@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { getTitle, modifyTitle } from "../helix/stream.js"
+import { getTitle, modifyTitle } from "../helix/stream.js";
 
 export const names = ["title"];
 
@@ -13,7 +13,8 @@ export const execute = async (
 ) => {
   if (!args.length) {
     client.raw(
-      `@reply-parent-msg-id=${state.id
+      `@reply-parent-msg-id=${
+        state.id
       } PRIVMSG ${channel} :Title is "${await getTitle(channelId)}"`
     );
   } else {
@@ -28,4 +29,4 @@ export const execute = async (
       );
     }
   }
-}
+};

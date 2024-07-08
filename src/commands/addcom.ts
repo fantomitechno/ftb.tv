@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { addCommand } from "../prisma/commands.js"
+import { addCommand } from "../prisma/commands.js";
 
 export const names = ["add-com"];
 
@@ -22,4 +22,4 @@ export const execute = async (
       );
     }
   }
-}
+};

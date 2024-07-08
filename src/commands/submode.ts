@@ -24,4 +24,4 @@ export const execute = async (
       `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Submode is now active`
     );
   }
-}
+};

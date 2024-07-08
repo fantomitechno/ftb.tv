@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { giveShoutout, sendAnnouncement } from "../helix/chat.js"
+import { giveShoutout, sendAnnouncement } from "../helix/chat.js";
 
 export const names = ["shoutout", "so"];
 
@@ -39,4 +39,4 @@ export const execute = async (
       );
       break;
   }
-}
+};

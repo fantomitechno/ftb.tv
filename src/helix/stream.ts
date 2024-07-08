@@ -116,19 +116,17 @@ const getChatSettings = async (channelId: string) => {
 };
 
 const startCommercials = async (channelId: string, length: number) => {
-  const req = await fetch(
-    `https://api.twitch.tv/helix/channels/commercial`, {
+  const req = await fetch(`https://api.twitch.tv/helix/channels/commercial`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${await getToken(channelId)}`,
       "Client-Id": process.env.TWITCH_ID!,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ broadcaster_id: channelId, length })
-  }
-  )
+    body: JSON.stringify({ broadcaster_id: channelId, length }),
+  });
   return req.status == 200;
-}
+};
 
 export {
   checkIfStreaming,
@@ -136,5 +134,5 @@ export {
   modifyChatSettings,
   getTitle,
   modifyTitle,
-  startCommercials
+  startCommercials,
 };

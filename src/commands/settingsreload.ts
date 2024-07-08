@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { reloadSettings } from "../automod"
+import { reloadSettings } from "../automod";
 
 export const names = ["settings-reload", "settingsr"];
 
@@ -11,9 +11,9 @@ export const execute = async (
   args: string[],
   isMod: boolean
 ) => {
-  if (!isMod) return
+  if (!isMod) return;
   await reloadSettings(channelId);
   client.raw(
     `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :Reloaded settings cache`
   );
-}
+};

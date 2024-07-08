@@ -11,7 +11,7 @@ export const execute = async (
   args: string[],
   isMod: boolean
 ) => {
-  if (!isMod) return
+  if (!isMod) return;
   let time = Number(args[0]);
   if (isNaN(time)) {
     client.raw(
@@ -19,7 +19,7 @@ export const execute = async (
     );
     return;
   }
-  const success = await startCommercials(channelId, time)
+  const success = await startCommercials(channelId, time);
   if (success) {
     client.raw(
       `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :A break is starting`
@@ -29,4 +29,4 @@ export const execute = async (
       `@reply-parent-msg-id=${state.id} PRIVMSG ${channel} :An error occured while launching an ad break`
     );
   }
-}
+};

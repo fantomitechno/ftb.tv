@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { delCommand } from "../prisma/commands.js"
+import { delCommand } from "../prisma/commands.js";
 
 export const names = ["del-com"];
 
@@ -22,4 +22,4 @@ export const execute = async (
       );
     }
   }
-}
+};

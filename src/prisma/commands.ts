@@ -10,8 +10,8 @@ const addCommand = async (
       where: {
         channelCommand: {
           channelId,
-          commandName
-        }
+          commandName,
+        },
       },
     })
   ) {
@@ -33,8 +33,8 @@ const delCommand = async (channelId: string, commandName: string) => {
       where: {
         channelCommand: {
           channelId,
-          commandName
-        }
+          commandName,
+        },
       },
     }))
   ) {
@@ -51,7 +51,11 @@ const delCommand = async (channelId: string, commandName: string) => {
   return true;
 };
 
-const listCommand = async (channelId: string, toAdd: string[], isMod: boolean) => {
+const listCommand = async (
+  channelId: string,
+  toAdd: string[],
+  isMod: boolean
+) => {
   const dbCommands = await prisma.command.findMany({
     where: {
       channelId,
@@ -65,14 +69,13 @@ const listCommand = async (channelId: string, toAdd: string[], isMod: boolean) =
       ],
     },
   });
-  return [
-    ...dbCommands.map((c) => c.commandName),
-    ...toAdd
-  ].sort()
+  return [...dbCommands.map((c) => c.commandName), ...toAdd].sort();
 };
 
 const getCommand = async (channelId: string, commandName: string) => {
-  return await prisma.command.findUnique({ where: { channelCommand: { channelId, commandName } } });
+  return await prisma.command.findUnique({
+    where: { channelCommand: { channelId, commandName } },
+  });
 };
 
 export { addCommand, delCommand, listCommand, getCommand };
