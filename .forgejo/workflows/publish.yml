@@ -11,10 +11,6 @@ env:
 jobs:
     build-and-push-image:
       runs-on: docker
-      permissions:
-        contents: read
-        packages: write
-      
       steps:
         - name: Checkout repository
           uses: https://code.forgejo.org/actions/checkout@v4
