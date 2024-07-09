@@ -1,5 +1,5 @@
 import { ChatUserstate, Client } from "tmi.js";
-import { reloadSettings } from "../automod";
+import { reloadSettings } from "../automod.js";
 
 export const names = ["settings-reload", "settingsr"];
 
